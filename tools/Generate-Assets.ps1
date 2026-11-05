@@ -30,7 +30,7 @@ function New-XmanaAsset([int]$width, [int]$height, [string]$fileName, [bool]$wid
         $font = [System.Drawing.Font]::new('Segoe UI', [single]($logoSize * 0.66), [System.Drawing.FontStyle]::Bold)
         $graphics.DrawString('X', $font, [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(8, 19, 24)), $left + ($logoSize * 0.19), $top + ($logoSize * 0.02))
         $titleFont = [System.Drawing.Font]::new('Segoe UI', [single]($height * 0.22), [System.Drawing.FontStyle]::Bold)
-        $graphics.DrawString('XMANA', $titleFont, [System.Drawing.SolidBrush]::White, $left + $logoSize + ($width * 0.035), [single]($height * 0.25))
+        $graphics.DrawString('XMANA', $titleFont, [System.Drawing.Brushes]::White, $left + $logoSize + ($width * 0.035), [single]($height * 0.25))
         $subFont = [System.Drawing.Font]::new('Segoe UI', [single]($height * 0.08), [System.Drawing.FontStyle]::Regular)
         $graphics.DrawString('CINEMATIC LIBRARY', $subFont, [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(157, 172, 190)), $left + $logoSize + ($width * 0.04), [single]($height * 0.59))
     }
