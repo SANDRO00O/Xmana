@@ -1274,28 +1274,133 @@ namespace Xmana
                 item.RootSeries : item.Id;
             var episodes = await SafeListAsync(() => api.GetVideoSeasonAsync(seriesId));
             foreach (var episode in episodes) episode.RootSeries = seriesId;
+
             JToken seasonResponse = null;
             try { seasonResponse = await api.GetVideoSeasonNumberAsync(seriesId); } catch { }
             var seasons = CinemanaApiClient.AsList(seasonResponse)
-                .Select(x => x is JObject seasonObject && seasonObject["season"] != null ? seasonObject["season"].ToString() : x.ToString())
+                .Select(x => x is JObject seasonObject && seasonObject["season"] != null
+                    ? seasonObject["season"].ToString()
+                    : x.ToString())
                 .Where(x => !String.IsNullOrWhiteSpace(x))
-                .Distinct()
-                .OrderBy(x => { int number; return Int32.TryParse(x, out number) ? number : Int32.MaxValue; })
+                .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            if (seasons.Count > 0)
+            if (seasons.Count == 0)
             {
-                foreach (var season in seasons)
+                seasons = episodes.Select(episode => episode.Season)
+                    .Where(season => !String.IsNullOrWhiteSpace(season))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+            }
+
+            seasons = seasons
+                .OrderBy(value =>
                 {
-                    var seasonEpisodes = episodes.Where(episode => episode.Season == season).ToList();
-                    if (seasonEpisodes.Count > 0)
-                        AddRail(L("Season ", "الموسم ") + season, seasonEpisodes);
-                }
-            }
-            else if (episodes.Count > 0)
+                    int number;
+                    return Int32.TryParse(value, out number) ? number : Int32.MaxValue;
+                })
+                .ThenBy(value => value, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (episodes.Count == 0)
             {
-                AddRail(L("Episodes", "الحلقات"), episodes);
+                AddMessage(L("No episodes are available for this series.", "لا توجد حلقات متاحة لهذا المسلسل."));
+                return;
             }
+
+            var section = new StackPanel { Spacing = 14 };
+            section.Children.Add(new TextBlock
+            {
+                Text = L("Episodes", "الحلقات"),
+                FontSize = 25,
+                FontWeight = Windows.UI.Text.FontWeights.SemiBold,
+                Foreground = new SolidColorBrush(Colors.White)
+            });
+
+            var episodeCards = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 18
+            };
+            var episodeRail = new ScrollViewer
+            {
+                Height = 290,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                HorizontalScrollMode = ScrollMode.Enabled,
+                VerticalScrollMode = ScrollMode.Disabled,
+                ZoomMode = ZoomMode.Disabled,
+                Content = episodeCards
+            };
+
+            Action<string> renderSeason = selectedSeason =>
+            {
+                episodeCards.Children.Clear();
+                var selectedEpisodes = String.IsNullOrWhiteSpace(selectedSeason)
+                    ? episodes
+                    : episodes.Where(episode =>
+                        String.Equals(episode.Season, selectedSeason, StringComparison.OrdinalIgnoreCase)).ToList();
+
+                var orderedEpisodes = selectedEpisodes
+                    .OrderBy(episode =>
+                    {
+                        int number;
+                        return Int32.TryParse(episode.EpisodeNumber, out number) ? number : Int32.MaxValue;
+                    })
+                    .ToList();
+
+                foreach (var episode in orderedEpisodes)
+                    episodeCards.Children.Add(CreateCard(episode));
+
+                if (orderedEpisodes.Count == 0)
+                    episodeCards.Children.Add(new TextBlock
+                    {
+                        Text = L("No episodes were returned for this season.", "لا توجد حلقات في هذا الموسم."),
+                        FontSize = 18,
+                        Foreground = new SolidColorBrush(Color.FromArgb(255, 175, 188, 202)),
+                        Margin = new Thickness(8, 18, 8, 18)
+                    });
+            };
+
+            if (seasons.Count > 1)
+            {
+                var seasonSelector = new ComboBox
+                {
+                    Header = L("Select season", "اختر الموسم"),
+                    MinWidth = 260,
+                    FontSize = 18,
+                    HorizontalAlignment = HorizontalAlignment.Left
+                };
+                foreach (var season in seasons)
+                    seasonSelector.Items.Add(new ComboBoxItem
+                    {
+                        Content = L("Season ", "الموسم ") + season,
+                        Tag = season
+                    });
+
+                seasonSelector.SelectionChanged += (s, e) =>
+                {
+                    var selected = seasonSelector.SelectedItem as ComboBoxItem;
+                    renderSeason(selected?.Tag as string);
+                };
+                seasonSelector.SelectedIndex = 0;
+                section.Children.Add(seasonSelector);
+            }
+            else
+            {
+                var season = seasons.FirstOrDefault();
+                if (!String.IsNullOrWhiteSpace(season))
+                    section.Children.Add(new TextBlock
+                    {
+                        Text = L("Season ", "الموسم ") + season,
+                        FontSize = 18,
+                        Foreground = new SolidColorBrush(Color.FromArgb(255, 175, 188, 202))
+                    });
+                renderSeason(season);
+            }
+
+            section.Children.Add(episodeRail);
+            PageContent.Children.Add(section);
         }
 
         private async Task StartPlaybackAsync(VideoItem item, double resumeSeconds = 0)
@@ -1468,7 +1573,7 @@ namespace Xmana
                     .OfType<ComboBoxItem>()
                     .FirstOrDefault(option => String.Equals(option.Tag as string, preferred, StringComparison.OrdinalIgnoreCase));
                 playerQualitySelector.SelectedItem = selected ?? playerQualitySelector.Items[0];
-                playerQualitySelector.SelectionChanged += async (s, e) =>
+                playerQualitySelector.SelectionChanged += (s, e) =>
                 {
                     var option = playerQualitySelector.SelectedItem as ComboBoxItem;
                     var quality = option?.Tag as string;
