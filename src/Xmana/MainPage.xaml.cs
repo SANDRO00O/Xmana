@@ -11,6 +11,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
+using Windows.UI.Xaml.Threading;
 using Xmana.Models;
 using Xmana.Services;
 
@@ -21,6 +22,13 @@ namespace Xmana
         private readonly CinemanaApiClient api = new CinemanaApiClient();
         private readonly LocalStateStore state = new LocalStateStore();
         private PlaybackService playback;
+        private DispatcherTimer playerTimer;
+        private Slider playerSeekSlider;
+        private TextBlock playerTimeText;
+        private Button playerPlayPauseButton;
+        private bool updatingSeek;
+        private VideoItem playingItem;
+        private DateTime lastProgressWriteUtc = DateTime.MinValue;
         private bool isArabic;
         private string currentSection = "Home";
 
@@ -686,31 +694,194 @@ namespace Xmana
         private void ShowPlayer(VideoItem item, Uri uri)
         {
             ResetContent();
+            playerTimer?.Stop();
             playback?.Dispose();
             playback = new PlaybackService();
-            var back = new Button
+            playingItem = item;
+            lastProgressWriteUtc = DateTime.MinValue;
+
+            var stage = new Grid
+            {
+                Height = 720,
+                Background = new SolidColorBrush(Colors.Black),
+                Margin = new Thickness(0, 8, 0, 16)
+            };
+            playback.View.HorizontalAlignment = HorizontalAlignment.Stretch;
+            playback.View.VerticalAlignment = VerticalAlignment.Stretch;
+            stage.Children.Add(playback.View);
+
+            var topOverlay = new Border
+            {
+                VerticalAlignment = VerticalAlignment.Top,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                Background = new SolidColorBrush(Color.FromArgb(185, 8, 12, 18)),
+                Padding = new Thickness(30, 18, 30, 18),
+                Child = new TextBlock
+                {
+                    Text = item.GetTitle(isArabic),
+                    FontSize = 25,
+                    FontWeight = Windows.UI.Text.FontWeights.SemiBold,
+                    Foreground = new SolidColorBrush(Colors.White)
+                }
+            };
+            stage.Children.Add(topOverlay);
+
+            playerSeekSlider = new Slider
+            {
+                Minimum = 0,
+                Maximum = 1000,
+                Value = 0,
+                StepFrequency = 1,
+                IsEnabled = false,
+                Margin = new Thickness(4, 0, 4, 0)
+            };
+            playerSeekSlider.ValueChanged += (s, e) =>
+            {
+                if (updatingSeek || playback == null || playback.Duration <= TimeSpan.Zero) return;
+                var seconds = playback.Duration.TotalSeconds * (playerSeekSlider.Value / 1000.0);
+                playback.Seek(TimeSpan.FromSeconds(seconds));
+            };
+
+            playerTimeText = new TextBlock
+            {
+                Text = "00:00 / --:--",
+                FontSize = 16,
+                Foreground = new SolidColorBrush(Color.FromArgb(255, 218, 226, 235)),
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(8, 0, 0, 0)
+            };
+            playerPlayPauseButton = new Button
+            {
+                Content = L("Pause", "إيقاف مؤقت"),
+                Style = (Style)Application.Current.Resources["XmanaButton"]
+            };
+            playerPlayPauseButton.Click += (s, e) =>
+            {
+                playback?.TogglePlayPause();
+                RefreshPlayerUi();
+            };
+
+            var backTen = new Button
+            {
+                Content = "−10s",
+                Style = (Style)Application.Current.Resources["XmanaButton"]
+            };
+            backTen.Click += (s, e) => playback?.SeekBy(TimeSpan.FromSeconds(-10));
+
+            var forwardTen = new Button
+            {
+                Content = "+10s",
+                Style = (Style)Application.Current.Resources["XmanaButton"]
+            };
+            forwardTen.Click += (s, e) => playback?.SeekBy(TimeSpan.FromSeconds(10));
+
+            var close = new Button
             {
                 Content = L("Back to details", "العودة للتفاصيل"),
                 Style = (Style)Application.Current.Resources["XmanaButton"]
             };
-            back.Click += async (s, e) =>
+            close.Click += async (s, e) =>
             {
+                SaveCurrentProgress();
+                playerTimer?.Stop();
+                playerTimer = null;
                 playback?.Dispose();
                 playback = null;
                 await ShowDetailsAsync(item);
             };
-            PageContent.Children.Add(new TextBlock
+
+            var controls = new StackPanel
             {
-                Text = item.GetTitle(isArabic),
-                FontSize = 28,
-                Foreground = new SolidColorBrush(Colors.White),
-                FontWeight = Windows.UI.Text.FontWeights.SemiBold
-            });
-            PageContent.Children.Add(back);
-            playback.View.Height = 760;
-            playback.View.HorizontalAlignment = HorizontalAlignment.Stretch;
-            PageContent.Children.Add(playback.View);
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Spacing = 12
+            };
+            controls.Children.Add(backTen);
+            controls.Children.Add(playerPlayPauseButton);
+            controls.Children.Add(forwardTen);
+            controls.Children.Add(close);
+
+            var timeline = new Grid();
+            timeline.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            timeline.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            Grid.SetColumn(playerSeekSlider, 0);
+            Grid.SetColumn(playerTimeText, 1);
+            timeline.Children.Add(playerSeekSlider);
+            timeline.Children.Add(playerTimeText);
+
+            var transportPanel = new StackPanel { Spacing = 12 };
+            transportPanel.Children.Add(timeline);
+            transportPanel.Children.Add(controls);
+            var bottomOverlay = new Border
+            {
+                VerticalAlignment = VerticalAlignment.Bottom,
+                Background = new SolidColorBrush(Color.FromArgb(220, 8, 12, 18)),
+                Padding = new Thickness(28, 14, 28, 18),
+                Child = transportPanel
+            };
+            stage.Children.Add(bottomOverlay);
+
+            PageContent.Children.Add(stage);
+            playback.PlaybackFailed += (s, message) =>
+            {
+                _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    AddMessage(L("Playback failed: ", "فشل تشغيل الفيديو: ") + message);
+                });
+            };
             playback.Play(uri);
+
+            playerTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            playerTimer.Tick += (s, e) => RefreshPlayerUi();
+            playerTimer.Start();
+            RefreshPlayerUi();
+            close.Focus(FocusState.Programmatic);
+        }
+
+        private void RefreshPlayerUi()
+        {
+            if (playback == null) return;
+            var duration = playback.Duration;
+            var position = playback.Position;
+            if (duration > TimeSpan.Zero)
+            {
+                playerSeekSlider.IsEnabled = playback.CanSeek;
+                updatingSeek = true;
+                playerSeekSlider.Value = Math.Max(0, Math.Min(1000,
+                    position.TotalSeconds / duration.TotalSeconds * 1000.0));
+                updatingSeek = false;
+                playerTimeText.Text = FormatTime(position) + " / " + FormatTime(duration);
+            }
+            playerPlayPauseButton.Content = playback.IsPlaying
+                ? L("Pause", "إيقاف مؤقت")
+                : L("Play", "تشغيل");
+
+            if ((DateTime.UtcNow - lastProgressWriteUtc).TotalSeconds >= 15)
+                SaveCurrentProgress();
+        }
+
+        private static string FormatTime(TimeSpan value)
+        {
+            if (value < TimeSpan.Zero) value = TimeSpan.Zero;
+            return value.TotalHours >= 1
+                ? value.ToString(@"h\:mm\:ss")
+                : value.ToString(@"mm\:ss");
+        }
+
+        private void SaveCurrentProgress()
+        {
+            if (playback == null || playingItem == null || playback.Duration <= TimeSpan.Zero) return;
+            state.SaveProgress(new PlaybackProgress
+            {
+                VideoId = playingItem.Id,
+                SeriesId = !String.IsNullOrWhiteSpace(playingItem.RootSeries) && playingItem.RootSeries != "0"
+                    ? playingItem.RootSeries : (playingItem.IsSeries ? playingItem.Id : String.Empty),
+                Season = playingItem.Season,
+                Episode = playingItem.EpisodeNumber,
+                PositionSeconds = playback.Position.TotalSeconds,
+                DurationSeconds = playback.Duration.TotalSeconds
+            });
+            lastProgressWriteUtc = DateTime.UtcNow;
         }
 
         private TextBlock SectionTitle(string title) => new TextBlock
