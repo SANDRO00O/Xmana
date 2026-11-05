@@ -113,6 +113,11 @@ namespace Xmana.Services
             return PlaybackItems.FirstOrDefault(x => x.VideoId == videoId && !x.Completed);
         }
 
+        public void ClearPlaybackProgress()
+        {
+            settings.Values["playbackProgress"] = "[]";
+        }
+
         public void SaveProgress(PlaybackProgress progress)
         {
             if (progress == null || String.IsNullOrWhiteSpace(progress.VideoId)) return;
