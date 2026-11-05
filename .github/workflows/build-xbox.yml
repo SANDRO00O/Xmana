@@ -32,10 +32,21 @@ jobs:
           if ($installExitCode -ne 0 -and $installExitCode -ne 3010) {
             throw "Adding UWP MSBuild support failed with exit code $installExitCode."
           }
-          $targets = Join-Path $programFilesX86 'MSBuild\Microsoft\WindowsXaml'
-          if (-not (Test-Path $targets)) {
-            throw "UWP XAML MSBuild targets were not installed under $targets."
+          $searchRoots = @(
+            (Join-Path $programFilesX86 'MSBuild'),
+            (Join-Path $installationPath 'MSBuild')
+          ) | Where-Object { Test-Path $_ }
+          $targetFiles = @(
+            foreach ($root in $searchRoots) {
+              Get-ChildItem -Path $root -Filter 'Microsoft.Windows.UI.Xaml.CSharp.targets' -File -Recurse -ErrorAction SilentlyContinue
+            }
+          )
+          if (-not $targetFiles) {
+            $rootsText = ($searchRoots -join '; ')
+            throw "UWP XAML MSBuild target file was not found. Searched: $rootsText"
           }
+          Write-Host "Found UWP XAML targets: $($targetFiles[0].FullName)"
+
       - name: Restore NuGet packages
         run: nuget restore Xmana.sln -NonInteractive
       - name: Build unsigned x64 UWP package
