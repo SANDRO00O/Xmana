@@ -12,6 +12,7 @@ namespace Xmana.Services
         private MediaPlayer player;
         public MediaPlayerElement View { get; private set; }
         public event EventHandler<string> PlaybackFailed;
+        private TimeSpan? pendingStartPosition;
 
         public PlaybackService()
         {
@@ -32,13 +33,23 @@ namespace Xmana.Services
         public bool IsPlaying => player != null &&
             player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
 
-        public void Play(Uri uri)
+        public void Play(Uri uri, TimeSpan? startPosition = null)
         {
             if (uri == null || !uri.IsAbsoluteUri ||
                 (uri.Scheme != "https" && uri.Scheme != "http"))
                 throw new ArgumentException("The API did not return a usable media URL.");
+            pendingStartPosition = startPosition;
+            if (pendingStartPosition.HasValue) player.MediaOpened += OnMediaOpened;
             player.Source = MediaSource.CreateFromUri(uri);
             player.Play();
+        }
+
+        private void OnMediaOpened(MediaPlayer sender, object args)
+        {
+            if (pendingStartPosition.HasValue && sender.PlaybackSession.CanSeek)
+                sender.PlaybackSession.Position = pendingStartPosition.Value;
+            pendingStartPosition = null;
+            sender.MediaOpened -= OnMediaOpened;
         }
 
         public void TogglePlayPause()
