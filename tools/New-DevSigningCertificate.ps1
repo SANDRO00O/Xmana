@@ -8,7 +8,7 @@ $padding = [System.Security.Cryptography.RSASignaturePadding]::Pkcs1
 $subject = [System.Security.Cryptography.X509Certificates.X500DistinguishedName]::new($publisher)
 $rsa = [System.Security.Cryptography.RSA]::Create(2048)
 $certificate = $null
-$publicCertificate = $null
+$addedStores = @()
 
 try {
     Write-Host 'Creating an ephemeral RSA-2048 X.509 code-signing certificate.'
@@ -41,6 +41,12 @@ try {
 
     $pfxPath = Join-Path $env:RUNNER_TEMP 'xmana-dev-signing.pfx'
     $cerPath = Join-Path $env:GITHUB_WORKSPACE 'artifacts\Xmana-Dev-Certificate.cer'
+    $certUtil = Join-Path $env:WINDIR 'System32\certutil.exe'
+
+    if (-not (Test-Path $certUtil)) { throw "certutil.exe was not found at $certUtil." }
+    if (-not (Test-Path (Split-Path $cerPath -Parent))) {
+        New-Item -ItemType Directory -Force -Path (Split-Path $cerPath -Parent) | Out-Null
+    }
 
     Write-Host 'Exporting temporary PFX and public certificate.'
     [System.IO.File]::WriteAllBytes(
@@ -49,33 +55,30 @@ try {
     )
     $cerBytes = $certificate.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert)
     [System.IO.File]::WriteAllBytes($cerPath, $cerBytes)
+    $thumbprint = $certificate.Thumbprint
 
-    $publicCertificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new($cerBytes)
-    foreach ($storeName in @(
-        [System.Security.Cryptography.X509Certificates.StoreName]::Root,
-        [System.Security.Cryptography.X509Certificates.StoreName]::TrustedPeople
-    )) {
-        $store = [System.Security.Cryptography.X509Certificates.X509Store]::new(
-            $storeName,
-            [System.Security.Cryptography.X509Certificates.StoreLocation]::CurrentUser
-        )
-        try {
-            $store.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadWrite)
-            $store.Add($publicCertificate)
+    foreach ($storeName in @('Root', 'TrustedPeople')) {
+        Write-Host "Adding the temporary public certificate to CurrentUser\$storeName with certutil."
+        & $certUtil -user -addstore -f $storeName $cerPath
+        if ($LASTEXITCODE -ne 0) {
+            throw "Adding the development certificate to CurrentUser\$storeName failed with exit code $LASTEXITCODE."
         }
-        finally {
-            $store.Close()
-        }
+        $addedStores += $storeName
     }
 
     "::add-mask::$password" | Out-Host
     "PFX_PATH=$pfxPath" | Out-File -FilePath $env:GITHUB_ENV -Append
     "PFX_PASSWORD=$password" | Out-File -FilePath $env:GITHUB_ENV -Append
-    "CERT_THUMBPRINT=$($publicCertificate.Thumbprint)" | Out-File -FilePath $env:GITHUB_ENV -Append
-    Write-Host "Development certificate ready. Thumbprint: $($publicCertificate.Thumbprint)"
+    "CERT_THUMBPRINT=$thumbprint" | Out-File -FilePath $env:GITHUB_ENV -Append
+    Write-Host "Development certificate ready. Thumbprint: $thumbprint"
+}
+catch {
+    foreach ($storeName in $addedStores) {
+        & (Join-Path $env:WINDIR 'System32\certutil.exe') -user -delstore $storeName $certificate.Thumbprint
+    }
+    throw
 }
 finally {
-    if ($publicCertificate) { $publicCertificate.Dispose() }
     if ($certificate) { $certificate.Dispose() }
     if ($rsa) { $rsa.Dispose() }
 }
