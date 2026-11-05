@@ -27,6 +27,7 @@ namespace Xmana
         private void OnSuspending(object sender, Windows.ApplicationModel.SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
+            MainPage.Current?.HandleApplicationSuspending();
             deferral.Complete();
         }
     }
