@@ -1,0 +1,77 @@
+name: Build Xmana for Xbox Dev Mode
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-x64:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Generate app icons and splash screen
+        shell: pwsh
+        run: ./tools/Generate-Assets.ps1
+      - name: Restore NuGet packages
+        run: nuget restore Xmana.sln -NonInteractive
+      - name: Build unsigned x64 UWP package
+        shell: pwsh
+        run: |
+          $packages = Join-Path $env:GITHUB_WORKSPACE 'artifacts\AppPackages\'
+          New-Item -ItemType Directory -Force -Path $packages | Out-Null
+          msbuild Xmana.sln /m /p:Configuration=Release /p:Platform=x64 /p:AppxBundle=Never /p:UapAppxPackageBuildMode=SideloadOnly /p:AppxPackageDir="$packages" /p:GenerateAppxPackageOnBuild=true /p:AppxPackageSigningEnabled=false
+          if ($LASTEXITCODE -ne 0) { throw 'UWP package build failed.' }
+      - name: Create temporary Xbox development signing certificate
+        shell: pwsh
+        run: |
+          $publisher = 'CN=Xmana Development'
+          $password = ConvertTo-SecureString -String ([Guid]::NewGuid().ToString('N') + 'Aa!') -Force -AsPlainText
+          $cert = New-SelfSignedCertificate -Type Custom -Subject $publisher -KeyUsage DigitalSignature -CertStoreLocation 'Cert:\CurrentUser\My' -TextExtension @('2.5.29.37={text}1.3.6.1.5.5.7.3.3') -FriendlyName 'Xmana Xbox Dev Mode Build Certificate'
+          $pfx = Join-Path $env:RUNNER_TEMP 'xmana-dev-signing.pfx'
+          $cer = Join-Path $env:GITHUB_WORKSPACE 'artifacts\Xmana-Dev-Certificate.cer'
+          Export-PfxCertificate -Cert $cert -FilePath $pfx -Password $password | Out-Null
+          Export-Certificate -Cert $cert -FilePath $cer | Out-Null
+          "PFX_PATH=$pfx" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "PFX_PASSWORD=$([System.Net.NetworkCredential]::new('', $password).Password)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "CERT_THUMBPRINT=$($cert.Thumbprint)" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Sign generated APPX packages
+        shell: pwsh
+        run: |
+          $programFilesX86 = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
+          $signtool = Get-ChildItem (Join-Path $programFilesX86 'Windows Kits\10\bin\*\x64\signtool.exe') | Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $signtool) { throw 'Windows SDK SignTool was not found.' }
+          $packages = Get-ChildItem 'artifacts\AppPackages' -Recurse -File -Filter 'Xmana_*.appx'
+          if (-not $packages) { throw 'No APPX package was produced by MSBuild.' }
+          foreach ($package in $packages) {
+            & $signtool.FullName sign /fd SHA256 /f $env:PFX_PATH /p $env:PFX_PASSWORD $package.FullName
+            if ($LASTEXITCODE -ne 0) { throw "Signing failed for $($package.Name)." }
+            & $signtool.FullName verify /pa /v $package.FullName
+            if ($LASTEXITCODE -ne 0) { throw "Signature verification failed for $($package.Name)." }
+          }
+          Remove-Item -Force $env:PFX_PATH
+          Remove-Item -Path (Join-Path 'Cert:\CurrentUser\My' $env:CERT_THUMBPRINT) -ErrorAction SilentlyContinue
+      - name: Prepare install bundle
+        shell: pwsh
+        run: |
+          $packages = Get-ChildItem 'artifacts\AppPackages' -Recurse -File -Filter 'Xmana_*.appx'
+          if (-not $packages) { throw 'No signed package remains after signing.' }
+          Get-FileHash $packages.FullName -Algorithm SHA256 | Format-Table -AutoSize
+          @'
+          # Xbox Developer Mode install
+          1. Open Xbox Device Portal while the console is in Developer Mode.
+          2. In Apps > Deploy apps, upload the signed .appx package.
+          3. Upload Xmana-Dev-Certificate.cer in the certificate field.
+          4. Select Install. Keep the .cer with this exact build; each workflow run creates a new development certificate.
+          This certificate is only for development/testing, not for Microsoft Store or production distribution.
+          '@ | Set-Content 'artifacts\INSTALL-XBOX.txt'
+      - name: Upload signed Xbox package and certificate
+        uses: actions/upload-artifact@v4
+        with:
+          name: Xmana-Xbox-DevMode-x64
+          path: artifacts/**
+          if-no-files-found: error
+          retention-days: 14
