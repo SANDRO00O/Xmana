@@ -19,12 +19,18 @@ namespace Xmana.Services
             player.MediaFailed += OnMediaFailed;
             View = new MediaPlayerElement
             {
-                AreTransportControlsEnabled = true,
+                AreTransportControlsEnabled = false,
                 AutoPlay = false,
                 Stretch = Windows.UI.Xaml.Media.Stretch.Uniform
             };
             View.SetMediaPlayer(player);
         }
+
+        public TimeSpan Position => player?.PlaybackSession.Position ?? TimeSpan.Zero;
+        public TimeSpan Duration => player?.PlaybackSession.NaturalDuration ?? TimeSpan.Zero;
+        public bool CanSeek => player != null && player.PlaybackSession.CanSeek;
+        public bool IsPlaying => player != null &&
+            player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
 
         public void Play(Uri uri)
         {
@@ -34,6 +40,29 @@ namespace Xmana.Services
             player.Source = MediaSource.CreateFromUri(uri);
             player.Play();
         }
+
+        public void TogglePlayPause()
+        {
+            if (player == null) return;
+            if (IsPlaying) player.Pause();
+            else player.Play();
+        }
+
+        public void Pause()
+        {
+            if (player != null) player.Pause();
+        }
+
+        public void Seek(TimeSpan position)
+        {
+            if (player == null || !CanSeek) return;
+            var duration = Duration;
+            var clamped = position < TimeSpan.Zero ? TimeSpan.Zero :
+                (duration > TimeSpan.Zero && position > duration ? duration : position);
+            player.PlaybackSession.Position = clamped;
+        }
+
+        public void SeekBy(TimeSpan amount) => Seek(Position + amount);
 
         private void OnMediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
         {
@@ -45,6 +74,7 @@ namespace Xmana.Services
         {
             if (player == null) return;
             player.MediaFailed -= OnMediaFailed;
+            player.Pause();
             player.Dispose();
             player = null;
         }
