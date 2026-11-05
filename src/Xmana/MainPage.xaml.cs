@@ -19,6 +19,8 @@ namespace Xmana
 {
     public sealed partial class MainPage : Page
     {
+        public static MainPage Current { get; private set; }
+
         private readonly CinemanaApiClient api = new CinemanaApiClient();
         private readonly LocalStateStore state = new LocalStateStore();
         private PlaybackService playback;
@@ -36,6 +38,7 @@ namespace Xmana
 
         public MainPage()
         {
+            Current = this;
             InitializeComponent();
             isArabic = state.Language == "ar";
             ApplyDirection();
@@ -1572,6 +1575,13 @@ namespace Xmana
             return value.TotalHours >= 1
                 ? value.ToString(@"h\:mm\:ss")
                 : value.ToString(@"mm\:ss");
+        }
+
+        public void HandleApplicationSuspending()
+        {
+            SaveCurrentProgress();
+            playback?.Pause();
+            playerTimer?.Stop();
         }
 
         private void SaveCurrentProgress()
