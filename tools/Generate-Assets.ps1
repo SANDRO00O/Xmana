@@ -53,6 +53,7 @@ function New-XmanaAsset([int]$width, [int]$height, [string]$fileName, [bool]$wid
 }
 
 New-XmanaAsset 44 44 'Square44x44Logo.png' $false
+New-XmanaAsset 50 50 'StoreLogo.png' $false
 New-XmanaAsset 150 150 'Square150x150Logo.png' $false
 New-XmanaAsset 310 150 'Wide310x150Logo.png' $true
 New-XmanaAsset 620 300 'SplashScreen.png' $true
