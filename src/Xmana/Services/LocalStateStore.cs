@@ -23,6 +23,7 @@ namespace Xmana.Services
         private readonly ApplicationDataContainer settings = ApplicationData.Current.LocalSettings;
         private const int MaxSearchHistory = 15;
         private const int MaxRecentlyViewed = 30;
+        private const int MaxWatchHistory = 60;
 
         public string Language
         {
@@ -89,24 +90,10 @@ namespace Xmana.Services
             WriteStringList("recentlyViewed", values.Take(MaxRecentlyViewed));
         }
 
-        public IList<PlaybackProgress> PlaybackItems
-        {
-            get
-            {
-                try
-                {
-                    var raw = settings.Values["playbackProgress"] as string;
-                    return String.IsNullOrWhiteSpace(raw)
-                        ? new List<PlaybackProgress>()
-                        : JsonConvert.DeserializeObject<List<PlaybackProgress>>(raw) ?? new List<PlaybackProgress>();
-                }
-                catch
-                {
-                    settings.Values.Remove("playbackProgress");
-                    return new List<PlaybackProgress>();
-                }
-            }
-        }
+        public IList<PlaybackProgress> PlaybackItems => ReadProgressList("playbackProgress");
+        public IList<PlaybackProgress> WatchHistory => ReadProgressList("watchHistory");
+
+        public void ClearWatchHistory() => settings.Values["watchHistory"] = "[]";
 
         public PlaybackProgress GetProgress(string videoId)
         {
@@ -121,12 +108,33 @@ namespace Xmana.Services
         public void SaveProgress(PlaybackProgress progress)
         {
             if (progress == null || String.IsNullOrWhiteSpace(progress.VideoId)) return;
-            var values = PlaybackItems.Where(x => x.VideoId != progress.VideoId).ToList();
             progress.LastPlayedUtc = DateTime.UtcNow;
             progress.Completed = progress.DurationSeconds > 0 &&
                 progress.PositionSeconds >= progress.DurationSeconds * 0.92;
+
+            var values = PlaybackItems.Where(x => x.VideoId != progress.VideoId).ToList();
             if (!progress.Completed && progress.DurationSeconds > 0) values.Insert(0, progress);
             settings.Values["playbackProgress"] = JsonConvert.SerializeObject(values.Take(100));
+
+            var history = WatchHistory.Where(x => x.VideoId != progress.VideoId).ToList();
+            history.Insert(0, progress);
+            settings.Values["watchHistory"] = JsonConvert.SerializeObject(history.Take(MaxWatchHistory));
+        }
+
+        private IList<PlaybackProgress> ReadProgressList(string key)
+        {
+            try
+            {
+                var raw = settings.Values[key] as string;
+                return String.IsNullOrWhiteSpace(raw)
+                    ? new List<PlaybackProgress>()
+                    : JsonConvert.DeserializeObject<List<PlaybackProgress>>(raw) ?? new List<PlaybackProgress>();
+            }
+            catch
+            {
+                settings.Values.Remove(key);
+                return new List<PlaybackProgress>();
+            }
         }
 
         private bool ReadBoolean(string key, bool fallback)
