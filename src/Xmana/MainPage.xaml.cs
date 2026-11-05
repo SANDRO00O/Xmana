@@ -43,7 +43,7 @@ namespace Xmana
                 child.Content = isArabic
                     ? (key == "Home" ? "الرئيسية" : key == "Movies" ? "الأفلام" :
                        key == "Series" ? "المسلسلات" : key == "Anime" ? "الأنمي" :
-                       key == "Search" ? "بحث" : "قائمتي")
+                       key == "Search" ? "بحث" : key == "Categories" ? "التصنيفات" : "قائمتي")
                     : key;
             }
             SettingsButton.Content = L("Settings  ⚙", "الإعدادات  ⚙");
@@ -67,6 +67,7 @@ namespace Xmana
                 case "Movies": await ShowListingAsync(L("Movies", "الأفلام"), () => api.GetLatestMoviesAsync("0", 0)); break;
                 case "Series": await ShowListingAsync(L("Series", "المسلسلات"), () => api.GetLatestSeriesAsync("0", 0), true); break;
                 case "Anime": await ShowAnimeAsync(); break;
+                case "Categories": await ShowCategoriesAsync(); break;
                 case "Search": ShowSearch(); break;
                 case "Library": ShowLibrary(); break;
                 case "Settings": ShowSettings(); break;
@@ -363,9 +364,9 @@ namespace Xmana
             ResetContent();
             ShowBusy(L("Loading anime…", "جارٍ تحميل الأنمي…"));
             var animeMovies = await SafeListAsync(() =>
-                api.GetVideosByCategoryAndLanguageAsync("57", "22", "1", "desc", "0", 36));
+                api.GetVideosByCategoryAndLanguageAsync("57", "22", "1", "desc", "0", 0));
             var animeSeries = await SafeListAsync(() =>
-                api.GetVideosByCategoryAndLanguageAsync("57", "22", "2", "desc", "0", 36));
+                api.GetVideosByCategoryAndLanguageAsync("57", "22", "2", "desc", "0", 0));
             foreach (var series in animeSeries) series.IsSeries = true;
             var items = animeMovies.Concat(animeSeries).GroupBy(v => v.Id).Select(g => g.First()).ToList();
             HideBusy();
@@ -375,6 +376,84 @@ namespace Xmana
                     "لم تُرجع فئة الأنمي أي عناصر حالياً."));
             else
                 AddRail(L("Animation catalog", "مكتبة الأنمي والرسوم المتحركة"), items);
+        }
+
+        private async Task ShowCategoriesAsync()
+        {
+            ResetContent();
+            ShowBusy(L("Loading categories…", "جارٍ تحميل التصنيفات…"));
+            JToken response = null;
+            try { response = await api.GetCategoryLanguageFrequencyAsync(); } catch { }
+            HideBusy();
+            PageContent.Children.Add(SectionTitle(L("Browse by category", "تصفح حسب التصنيف")));
+            var categories = CinemanaApiClient.AsList(response);
+            if (!categories.Any())
+            {
+                AddMessage(L("Category data is unavailable right now.", "بيانات التصنيفات غير متاحة حالياً."));
+                return;
+            }
+
+            var grid = new GridView
+            {
+                ItemsSource = null,
+                IsItemClickEnabled = true,
+                SelectionMode = ListViewSelectionMode.None,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                ItemClick = null
+            };
+            var wrap = new WrapGrid { ItemWidth = 310, ItemHeight = 92, Orientation = Orientation.Horizontal };
+            grid.ItemsPanel = new ItemsPanelTemplate(() => wrap);
+            foreach (var entry in categories)
+            {
+                var id = entry["nb"]?.ToString();
+                var title = isArabic ? entry["ar_title"]?.ToString() : entry["en_title"]?.ToString();
+                if (String.IsNullOrWhiteSpace(id) || String.IsNullOrWhiteSpace(title)) continue;
+                var button = new Button
+                {
+                    Content = title,
+                    Tag = new CategoryChoice { Id = id, Title = title },
+                    Style = (Style)Application.Current.Resources["XmanaButton"],
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                    Margin = new Thickness(6),
+                    Height = 78
+                };
+                button.Click += async (s, e) =>
+                {
+                    var choice = (CategoryChoice)((Button)s).Tag;
+                    await ShowCategoryAsync(choice);
+                };
+                grid.Items.Add(button);
+            }
+
+            if (grid.Items.Count == 0)
+            {
+                AddMessage(L("No category entries could be read from the response.", "تعذر قراءة عناصر التصنيف من الاستجابة."));
+                return;
+            }
+            PageContent.Children.Add(grid);
+        }
+
+        private async Task ShowCategoryAsync(CategoryChoice category)
+        {
+            ResetContent();
+            ShowBusy(L("Loading category…", "جارٍ تحميل التصنيف…"));
+            var movies = await SafeListAsync(() =>
+                api.GetVideosByCategoryAsync(category.Id, "desc", "1", 0, "0"));
+            var series = await SafeListAsync(() =>
+                api.GetVideosByCategoryAsync(category.Id, "desc", "2", 0, "0"));
+            foreach (var item in series) item.IsSeries = true;
+            HideBusy();
+            PageContent.Children.Add(SectionTitle(category.Title));
+            AddRail(L("Movies", "الأفلام"), movies);
+            AddRail(L("Series", "المسلسلات"), series);
+            if (movies.Count == 0 && series.Count == 0)
+                AddMessage(L("No titles were returned for this category.", "لم تُرجع هذه الفئة عناوين."));
+        }
+
+        private sealed class CategoryChoice
+        {
+            public string Id { get; set; }
+            public string Title { get; set; }
         }
 
         private void ShowSearch()
@@ -563,9 +642,10 @@ namespace Xmana
             JToken seasonResponse = null;
             try { seasonResponse = await api.GetVideoSeasonNumberAsync(seriesId); } catch { }
             var seasons = CinemanaApiClient.AsList(seasonResponse)
-                .Select(x => x.ToString())
+                .Select(x => x["season"] != null ? x["season"].ToString() : x.ToString())
                 .Where(x => !String.IsNullOrWhiteSpace(x))
                 .Distinct()
+                .OrderBy(x => { int number; return Int32.TryParse(x, out number) ? number : Int32.MaxValue; })
                 .ToList();
 
             if (seasons.Count > 0)
