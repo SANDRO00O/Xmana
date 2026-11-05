@@ -46,6 +46,9 @@ jobs:
             throw "UWP XAML MSBuild target file was not found. Searched: $rootsText"
           }
           Write-Host "Found UWP XAML targets: $($targetFiles[0].FullName)"
+          $msbuildPath = Join-Path $installationPath 'MSBuild\Current\Bin\MSBuild.exe'
+          if (-not (Test-Path $msbuildPath)) { throw "MSBuild.exe was not found at $msbuildPath." }
+          "MSBUILD_PATH=$msbuildPath" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Restore NuGet packages
         run: nuget restore Xmana.sln -NonInteractive
@@ -54,7 +57,8 @@ jobs:
         run: |
           $packages = Join-Path $env:GITHUB_WORKSPACE 'artifacts\AppPackages\'
           New-Item -ItemType Directory -Force -Path $packages | Out-Null
-          msbuild Xmana.sln /m /p:Configuration=Release /p:Platform=x64 /p:AppxBundle=Never /p:UapAppxPackageBuildMode=SideloadOnly /p:AppxPackageDir="$packages" /p:GenerateAppxPackageOnBuild=true /p:AppxPackageSigningEnabled=false
+          if (-not (Test-Path $env:MSBUILD_PATH)) { throw "MSBuild executable is missing: $env:MSBUILD_PATH" }
+          & $env:MSBUILD_PATH Xmana.sln /m /p:Configuration=Release /p:Platform=x64 /p:AppxBundle=Never /p:UapAppxPackageBuildMode=SideloadOnly /p:AppxPackageDir="$packages" /p:GenerateAppxPackageOnBuild=true /p:AppxPackageSigningEnabled=false
           if ($LASTEXITCODE -ne 0) { throw 'UWP package build failed.' }
       - name: Create temporary Xbox development signing certificate
         shell: pwsh
