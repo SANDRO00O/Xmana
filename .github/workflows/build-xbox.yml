@@ -16,6 +16,32 @@ jobs:
       - name: Generate app icons and splash screen
         shell: pwsh
         run: ./tools/Generate-Assets.ps1
+      - name: Install Universal Windows Platform MSBuild support
+        shell: pwsh
+        run: |
+          $installerRoot = Join-Path $env:ProgramFiles 'Microsoft Visual Studio\Installer'
+          $vswhere = Join-Path $installerRoot 'vswhere.exe'
+          $installer = Join-Path $installerRoot 'vs_installer.exe'
+          if (-not (Test-Path $vswhere)) { throw "vswhere.exe was not found at $vswhere" }
+          if (-not (Test-Path $installer)) { throw "Visual Studio Installer was not found at $installer" }
+          $installationPath = & $vswhere -latest -products '*' -property installationPath
+          if (-not $installationPath) { throw 'Visual Studio 2022 installation was not found.' }
+          $arguments = @(
+            'modify',
+            '--installPath', $installationPath,
+            '--add', 'Microsoft.VisualStudio.ComponentGroup.UWP.Support',
+            '--quiet',
+            '--wait',
+            '--norestart'
+          )
+          $process = Start-Process -FilePath $installer -ArgumentList $arguments -Wait -PassThru -NoNewWindow
+          if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) {
+            throw "Adding UWP MSBuild support failed with exit code $($process.ExitCode)."
+          }
+          $targets = Join-Path $env:ProgramFiles(x86) 'MSBuild\Microsoft\WindowsXaml'
+          if (-not (Test-Path $targets)) {
+            throw "UWP XAML MSBuild targets were not installed under $targets."
+          }
       - name: Restore NuGet packages
         run: nuget restore Xmana.sln -NonInteractive
       - name: Build unsigned x64 UWP package
