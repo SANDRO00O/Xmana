@@ -62,14 +62,20 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'UWP package build failed.' }
       - name: Create temporary Xbox development signing certificate
         shell: pwsh
+        timeout-minutes: 3
         run: |
+          $ErrorActionPreference = 'Stop'
           $publisher = 'CN=Xmana Development'
           $password = ConvertTo-SecureString -String ([Guid]::NewGuid().ToString('N') + 'Aa!') -Force -AsPlainText
-          $cert = New-SelfSignedCertificate -Type Custom -Subject $publisher -KeyUsage DigitalSignature -KeyExportPolicy Exportable -CertStoreLocation 'Cert:\CurrentUser\My' -TextExtension @('2.5.29.37={text}1.3.6.1.5.5.7.3.3', '2.5.29.19={text}CA=FALSE') -FriendlyName 'Xmana Xbox Dev Mode Build Certificate'
+          Write-Host 'Creating a temporary RSA-2048 code-signing certificate.'
+          $cert = New-SelfSignedCertificate -Type Custom -Subject $publisher -KeyAlgorithm RSA -KeyLength 2048 -HashAlgorithm SHA256 -KeyUsage DigitalSignature -KeyExportPolicy Exportable -Provider 'Microsoft Software Key Storage Provider' -CertStoreLocation 'Cert:\CurrentUser\My' -TextExtension @('2.5.29.37={text}1.3.6.1.5.5.7.3.3', '2.5.29.19={text}CA=FALSE') -NotAfter (Get-Date).AddDays(30) -FriendlyName 'Xmana Xbox Dev Mode Build Certificate'
+          Write-Host "Certificate created: $($cert.Thumbprint)"
           $pfx = Join-Path $env:RUNNER_TEMP 'xmana-dev-signing.pfx'
           $cer = Join-Path $env:GITHUB_WORKSPACE 'artifacts\Xmana-Dev-Certificate.cer'
+          Write-Host 'Exporting temporary signing PFX and public certificate.'
           Export-PfxCertificate -Cert $cert -FilePath $pfx -Password $password | Out-Null
           Export-Certificate -Cert $cert -FilePath $cer | Out-Null
+          Write-Host 'Importing the temporary certificate into the runner trust stores for signature verification.'
           Import-Certificate -FilePath $cer -CertStoreLocation 'Cert:\CurrentUser\Root' | Out-Null
           Import-Certificate -FilePath $cer -CertStoreLocation 'Cert:\CurrentUser\TrustedPeople' | Out-Null
           "PFX_PATH=$pfx" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -77,6 +83,7 @@ jobs:
           "::add-mask::$plainPassword" | Out-Host
           "PFX_PASSWORD=$plainPassword" | Out-File -FilePath $env:GITHUB_ENV -Append
           "CERT_THUMBPRINT=$($cert.Thumbprint)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Host 'Temporary certificate and public .cer are ready.'
       - name: Sign generated APPX packages
         shell: pwsh
         run: |
