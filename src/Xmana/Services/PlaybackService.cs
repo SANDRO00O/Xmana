@@ -1,6 +1,8 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 using Windows.Media.Core;
 using Windows.Media.Playback;
 using Windows.UI.Xaml.Controls;
@@ -10,9 +12,10 @@ namespace Xmana.Services
     public sealed class PlaybackService : IDisposable
     {
         private MediaPlayer player;
+        private TimeSpan? pendingStartPosition;
+
         public MediaPlayerElement View { get; private set; }
         public event EventHandler<string> PlaybackFailed;
-        private TimeSpan? pendingStartPosition;
 
         public PlaybackService()
         {
@@ -38,6 +41,8 @@ namespace Xmana.Services
             if (uri == null || !uri.IsAbsoluteUri ||
                 (uri.Scheme != "https" && uri.Scheme != "http"))
                 throw new ArgumentException("The API did not return a usable media URL.");
+
+            player.MediaOpened -= OnMediaOpened;
             pendingStartPosition = startPosition;
             if (pendingStartPosition.HasValue) player.MediaOpened += OnMediaOpened;
             player.Source = MediaSource.CreateFromUri(uri);
@@ -77,23 +82,112 @@ namespace Xmana.Services
 
         private void OnMediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
         {
-            // Never expose media URLs: the source can include a temporary signed URL.
-            PlaybackFailed?.Invoke(this, args.ErrorMessage ?? "Playback failed.");
+            // Do not surface the platform error text because it can include source details.
+            PlaybackFailed?.Invoke(this, "Playback failed. Try another available quality or return to details.");
         }
 
         public void Dispose()
         {
             if (player == null) return;
             player.MediaFailed -= OnMediaFailed;
+            player.MediaOpened -= OnMediaOpened;
             player.Pause();
             player.Dispose();
             player = null;
         }
 
-        public static Uri FindStreamUrl(JToken token)
+        public static IList<string> FindAvailableQualities(JToken token)
         {
-            var candidates = new List<string>();
-            Walk(token, candidates, false);
+            var qualities = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            CollectQualities(token, qualities);
+            return qualities.OrderByDescending(value =>
+            {
+                var digits = Regex.Match(value ?? String.Empty, @"^\d+");
+                int number;
+                return digits.Success && Int32.TryParse(digits.Value, out number) ? number : 0;
+            }).ToList();
+        }
+
+        public static Uri FindStreamUrl(JToken token, string preferredQuality = null)
+        {
+            if (token == null) return null;
+
+            if (!String.IsNullOrWhiteSpace(preferredQuality) &&
+                !String.Equals(preferredQuality, "Auto", StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (var candidate in FindQualityObjects(token, preferredQuality))
+                {
+                    var urls = new List<string>();
+                    Walk(candidate, urls, false);
+                    var selected = FirstHttpUri(urls);
+                    if (selected != null) return selected;
+                }
+            }
+
+            var fallback = new List<string>();
+            Walk(token, fallback, false);
+            return FirstHttpUri(fallback);
+        }
+
+        private static IEnumerable<JObject> FindQualityObjects(JToken token, string quality)
+        {
+            var objects = new List<JObject>();
+            CollectQualityObjects(token, quality, objects);
+            return objects.OrderBy(obj => obj.Descendants().Count());
+        }
+
+        private static void CollectQualityObjects(JToken token, string quality, IList<JObject> result)
+        {
+            if (token == null) return;
+            var obj = token as JObject;
+            if (obj != null)
+            {
+                var hasQuality = obj.DescendantsAndSelf()
+                    .OfType<JValue>()
+                    .Any(value => value.Type == JTokenType.String &&
+                        String.Equals(value.ToString(), quality, StringComparison.OrdinalIgnoreCase));
+                if (hasQuality)
+                {
+                    var urls = new List<string>();
+                    Walk(obj, urls, false);
+                    if (FirstHttpUri(urls) != null) result.Add(obj);
+                }
+                foreach (var property in obj.Properties())
+                    CollectQualityObjects(property.Value, quality, result);
+                return;
+            }
+
+            var array = token as JArray;
+            if (array != null)
+                foreach (var child in array) CollectQualityObjects(child, quality, result);
+        }
+
+        private static void CollectQualities(JToken token, ISet<string> qualities)
+        {
+            if (token == null) return;
+            var value = token as JValue;
+            if (value != null && value.Type == JTokenType.String)
+            {
+                var label = value.ToString();
+                if (Regex.IsMatch(label, @"^\d{3,4}p$", RegexOptions.IgnoreCase))
+                    qualities.Add(label);
+                return;
+            }
+
+            var obj = token as JObject;
+            if (obj != null)
+            {
+                foreach (var property in obj.Properties()) CollectQualities(property.Value, qualities);
+                return;
+            }
+
+            var array = token as JArray;
+            if (array != null)
+                foreach (var child in array) CollectQualities(child, qualities);
+        }
+
+        private static Uri FirstHttpUri(IEnumerable<string> candidates)
+        {
             foreach (var value in candidates)
             {
                 Uri uri;
