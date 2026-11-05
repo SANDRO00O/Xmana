@@ -553,16 +553,50 @@ namespace Xmana
             PageContent.Children.Add(searchRow);
             AddMessage(L("Search uses Cinemana's Base64URL title-search route. Enter a title to begin.",
                 "يستخدم البحث مسار العناوين الموثق لدى Cinemana. أدخل عنواناً للبدء."));
+            var history = state.SearchHistory;
+            if (history.Count > 0)
+            {
+                var historyPanel = new StackPanel { Spacing = 10 };
+                historyPanel.Children.Add(new TextBlock
+                {
+                    Text = L("Recent searches", "عمليات البحث الأخيرة"),
+                    FontSize = 19,
+                    Foreground = new SolidColorBrush(Color.FromArgb(255, 175, 190, 207))
+                });
+                var historyRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+                foreach (var term in history.Take(8))
+                {
+                    var recent = new Button
+                    {
+                        Content = term,
+                        Tag = term,
+                        Style = (Style)Application.Current.Resources["XmanaButton"]
+                    };
+                    recent.Click += async (s, e) => await RunSearchAsync((string)((Button)s).Tag);
+                    historyRow.Children.Add(recent);
+                }
+                var clear = new Button
+                {
+                    Content = L("Clear", "مسح"),
+                    Style = (Style)Application.Current.Resources["XmanaButton"]
+                };
+                clear.Click += (s, e) => { state.ClearSearchHistory(); NavigateAsync("Search"); };
+                historyRow.Children.Add(clear);
+                historyPanel.Children.Add(historyRow);
+                PageContent.Children.Add(historyPanel);
+            }
             query.Focus(FocusState.Programmatic);
         }
 
         private async Task RunSearchAsync(string text)
         {
             if (String.IsNullOrWhiteSpace(text)) return;
+            var query = text.Trim();
+            state.AddSearch(query);
             ShowBusy(L("Searching…", "جارٍ البحث…"));
-            var items = await SafeListAsync(() => api.SearchTitleAsync(text.Trim(), 0, "0"));
+            var items = await SafeListAsync(() => api.SearchTitleAsync(query, 0, "0"));
             HideBusy();
-            if (PageContent.Children.Count > 0) PageContent.Children.RemoveAt(PageContent.Children.Count - 1);
+            while (PageContent.Children.Count > 2) PageContent.Children.RemoveAt(PageContent.Children.Count - 1);
             AddRail(L("Search results", "نتائج البحث"), items);
             if (items.Count == 0) AddMessage(L("No matching titles were found.", "لم يتم العثور على عناوين مطابقة."));
         }
@@ -571,32 +605,54 @@ namespace Xmana
         {
             ResetContent();
             PageContent.Children.Add(SectionTitle(L("Your collection", "مكتبتك")));
-            var ids = state.Favorites;
-            if (ids.Count == 0)
+            var favorites = state.Favorites.ToList();
+            var watchlist = state.Watchlist.ToList();
+            var recent = state.RecentlyViewed.ToList();
+            if (favorites.Count == 0 && watchlist.Count == 0 && recent.Count == 0)
             {
-                AddMessage(L("Your list is empty. Add titles from their details page.",
-                    "قائمتك فارغة. أضف العناوين من صفحة التفاصيل."));
+                AddMessage(L("Your collection is empty. Save a title from its details page.",
+                    "مكتبتك فارغة. احفظ أي عنوان من صفحة التفاصيل."));
                 return;
             }
-            ShowBusy(L("Restoring your list…", "جارٍ استعادة قائمتك…"));
-            _ = LoadLibraryAsync(ids.ToList());
+            ShowBusy(L("Restoring your collection…", "جارٍ استعادة مكتبتك…"));
+            _ = LoadLibraryAsync(favorites, watchlist, recent);
         }
 
-        private async Task LoadLibraryAsync(IList<string> ids)
+        private async Task LoadLibraryAsync(IList<string> favorites, IList<string> watchlist, IList<string> recent)
         {
-            var items = new List<VideoItem>();
-            foreach (var id in ids)
+            var cache = new Dictionary<string, VideoItem>(StringComparer.OrdinalIgnoreCase);
+            async Task<List<VideoItem>> Resolve(IList<string> ids)
             {
-                try
+                var resolved = new List<VideoItem>();
+                foreach (var id in ids)
                 {
-                    var item = VideoItem.FromToken(await api.GetAllVideoInfoAsync(id));
-                    if (item != null) items.Add(item);
+                    if (cache.ContainsKey(id))
+                    {
+                        resolved.Add(cache[id]);
+                        continue;
+                    }
+                    try
+                    {
+                        var item = VideoItem.FromToken(await api.GetAllVideoInfoAsync(id));
+                        if (item != null)
+                        {
+                            cache[id] = item;
+                            resolved.Add(item);
+                        }
+                    }
+                    catch { }
                 }
-                catch { }
+                return resolved;
             }
+
+            var favoriteItems = await Resolve(favorites);
+            var watchlistItems = await Resolve(watchlist);
+            var recentItems = await Resolve(recent);
             HideBusy();
-            AddRail(L("Favorites", "المفضلة"), items);
-            if (items.Count == 0)
+            AddRail(L("Favorites", "المفضلة"), favoriteItems);
+            AddRail(L("Watchlist", "قائمة المشاهدة"), watchlistItems);
+            AddRail(L("Recently viewed", "شوهدت مؤخراً"), recentItems);
+            if (favoriteItems.Count + watchlistItems.Count + recentItems.Count == 0)
                 AddMessage(L("Saved titles could not be loaded from the service.",
                     "تعذر تحميل العناوين المحفوظة من الخدمة."));
         }
@@ -619,8 +675,39 @@ namespace Xmana
                 await NavigateAsync("Settings");
             };
             PageContent.Children.Add(language);
-            AddMessage(L("Xmana is a local-first client. Favorites and interface language stay on this console. No account login is implemented.",
-                "Xmana تطبيق محلي أولاً. تُحفظ المفضلة ولغة الواجهة على هذا الجهاز. لا يتضمن التطبيق تسجيل دخول للحسابات."));
+
+            var resume = new Button
+            {
+                Content = state.ResumePlayback
+                    ? L("Resume playback: On", "استكمال المشاهدة: مفعّل")
+                    : L("Resume playback: Off", "استكمال المشاهدة: متوقف"),
+                Style = (Style)Application.Current.Resources["XmanaButton"],
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
+            resume.Click += (s, e) =>
+            {
+                state.ResumePlayback = !state.ResumePlayback;
+                resume.Content = state.ResumePlayback
+                    ? L("Resume playback: On", "استكمال المشاهدة: مفعّل")
+                    : L("Resume playback: Off", "استكمال المشاهدة: متوقف");
+            };
+            PageContent.Children.Add(resume);
+
+            var resetProgress = new Button
+            {
+                Content = L("Clear continue-watching progress", "مسح تقدم المشاهدة"),
+                Style = (Style)Application.Current.Resources["XmanaButton"],
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
+            resetProgress.Click += (s, e) =>
+            {
+                state.ClearPlaybackProgress();
+                resetProgress.IsEnabled = false;
+                resetProgress.Content = L("Progress cleared", "تم مسح التقدم");
+            };
+            PageContent.Children.Add(resetProgress);
+            AddMessage(L("Xmana stores favorites, watchlist, recent searches, viewed titles and playback progress locally. It does not sign in to a Cinemana account.",
+                "يحفظ Xmana المفضلة وقائمة المشاهدة والبحث الأخير والعناوين المشاهدة وتقدم التشغيل محلياً. لا يسجل الدخول إلى حساب Cinemana."));
             var faq = new Button
             {
                 Content = L("Load FAQ", "تحميل الأسئلة الشائعة"),
