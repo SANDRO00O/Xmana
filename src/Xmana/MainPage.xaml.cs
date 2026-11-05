@@ -698,7 +698,7 @@ namespace Xmana
                     Content = L("Clear", "مسح"),
                     Style = (Style)Application.Current.Resources["XmanaButton"]
                 };
-                clear.Click += (s, e) => { state.ClearSearchHistory(); NavigateAsync("Search"); };
+                clear.Click += async (s, e) => { state.ClearSearchHistory(); await NavigateAsync("Search"); };
                 historyRow.Children.Add(clear);
                 historyPanel.Children.Add(historyRow);
                 PageContent.Children.Add(historyPanel);
@@ -1473,7 +1473,7 @@ namespace Xmana
                     var option = playerQualitySelector.SelectedItem as ComboBoxItem;
                     var quality = option?.Tag as string;
                     if (!String.IsNullOrWhiteSpace(quality))
-                        await ChangePlaybackQualityAsync(quality);
+                        ChangePlaybackQuality(quality);
                 };
                 transportPanel.Children.Add(playerQualitySelector);
             }
@@ -1503,7 +1503,7 @@ namespace Xmana
             close.Focus(FocusState.Programmatic);
         }
 
-        private async Task ChangePlaybackQualityAsync(string quality)
+        private void ChangePlaybackQuality(string quality)
         {
             if (playback == null || activePlaybackFiles == null) return;
             var qualities = PlaybackService.FindAvailableQualities(activePlaybackFiles);
