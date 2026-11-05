@@ -22,22 +22,15 @@ jobs:
           $programFilesX86 = [Environment]::GetFolderPath('ProgramFilesX86')
           $installerRoot = Join-Path $programFilesX86 'Microsoft Visual Studio\Installer'
           $vswhere = Join-Path $installerRoot 'vswhere.exe'
-          $installer = Join-Path $installerRoot 'vs_installer.exe'
+          $installer = Join-Path $installerRoot 'setup.exe'
           if (-not (Test-Path $vswhere)) { throw "vswhere.exe was not found at $vswhere" }
           if (-not (Test-Path $installer)) { throw "Visual Studio Installer was not found at $installer" }
           $installationPath = & $vswhere -latest -products '*' -property installationPath
           if (-not $installationPath) { throw 'Visual Studio 2022 installation was not found.' }
-          $arguments = @(
-            'modify',
-            '--installPath', $installationPath,
-            '--add', 'Microsoft.VisualStudio.ComponentGroup.UWP.Support',
-            '--quiet',
-            '--wait',
-            '--norestart'
-          )
-          $process = Start-Process -FilePath $installer -ArgumentList $arguments -Wait -PassThru -NoNewWindow
-          if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) {
-            throw "Adding UWP MSBuild support failed with exit code $($process.ExitCode)."
+          & $installer modify --installPath "$installationPath" --add Microsoft.VisualStudio.ComponentGroup.UWP.Support --quiet --wait --norestart
+          $installExitCode = $LASTEXITCODE
+          if ($installExitCode -ne 0 -and $installExitCode -ne 3010) {
+            throw "Adding UWP MSBuild support failed with exit code $installExitCode."
           }
           $targets = Join-Path $programFilesX86 'MSBuild\Microsoft\WindowsXaml'
           if (-not (Test-Path $targets)) {
