@@ -560,9 +560,27 @@ namespace Xmana
             var seriesId = !String.IsNullOrWhiteSpace(item.RootSeries) && item.RootSeries != "0" ?
                 item.RootSeries : item.Id;
             var episodes = await SafeListAsync(() => api.GetVideoSeasonAsync(seriesId));
-            var seasons = await SafeListAsync(() => api.GetVideoSeasonNumberAsync(seriesId));
-            if (seasons.Count > 0) AddRail(L("Seasons", "المواسم"), seasons);
-            if (episodes.Count > 0) AddRail(L("Episodes", "الحلقات"), episodes);
+            JToken seasonResponse = null;
+            try { seasonResponse = await api.GetVideoSeasonNumberAsync(seriesId); } catch { }
+            var seasons = CinemanaApiClient.AsList(seasonResponse)
+                .Select(x => x.ToString())
+                .Where(x => !String.IsNullOrWhiteSpace(x))
+                .Distinct()
+                .ToList();
+
+            if (seasons.Count > 0)
+            {
+                foreach (var season in seasons)
+                {
+                    var seasonEpisodes = episodes.Where(episode => episode.Season == season).ToList();
+                    if (seasonEpisodes.Count > 0)
+                        AddRail(L("Season ", "الموسم ") + season, seasonEpisodes);
+                }
+            }
+            else if (episodes.Count > 0)
+            {
+                AddRail(L("Episodes", "الحلقات"), episodes);
+            }
         }
 
         private async Task StartPlaybackAsync(VideoItem item)
