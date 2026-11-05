@@ -27,7 +27,7 @@ jobs:
           if (-not (Test-Path $installer)) { throw "Visual Studio Installer was not found at $installer" }
           $installationPath = & $vswhere -latest -products '*' -property installationPath
           if (-not $installationPath) { throw 'Visual Studio 2022 installation was not found.' }
-          & $installer modify --installPath "$installationPath" --add Microsoft.VisualStudio.ComponentGroup.UWP.Support --quiet --wait --norestart
+          & $installer modify --installPath "$installationPath" --channelId VisualStudio.17.Release --add Microsoft.VisualStudio.ComponentGroup.UWP.Support --quiet --norestart
           $installExitCode = $LASTEXITCODE
           if ($installExitCode -ne 0 -and $installExitCode -ne 3010) {
             throw "Adding UWP MSBuild support failed with exit code $installExitCode."
