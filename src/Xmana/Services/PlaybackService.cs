@@ -100,12 +100,13 @@ namespace Xmana.Services
         {
             var qualities = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             CollectQualities(token, qualities);
-            return qualities.OrderByDescending(value =>
-            {
-                var digits = Regex.Match(value ?? String.Empty, @"^\d+");
-                int number;
-                return digits.Success && Int32.TryParse(digits.Value, out number) ? number : 0;
-            }).ToList();
+            return qualities.Where(quality => FindQualityObjects(token, quality).Any())
+                .OrderByDescending(value =>
+                {
+                    var digits = Regex.Match(value ?? String.Empty, @"^\d+");
+                    int number;
+                    return digits.Success && Int32.TryParse(digits.Value, out number) ? number : 0;
+                }).ToList();
         }
 
         public static Uri FindStreamUrl(JToken token, string preferredQuality = null)
