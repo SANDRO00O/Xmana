@@ -724,7 +724,114 @@ namespace Xmana
                 historyPanel.Children.Add(historyRow);
                 PageContent.Children.Add(historyPanel);
             }
+            var advancedToggle = new Button
+            {
+                Content = L("Advanced search  ▾", "بحث متقدم  ▾"),
+                Style = (Style)Application.Current.Resources["XmanaButton"],
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
+            var advancedPanel = new StackPanel
+            {
+                Spacing = 12,
+                MaxWidth = 1100,
+                Visibility = Visibility.Collapsed,
+                Margin = new Thickness(0, 4, 0, 12)
+            };
+            advancedPanel.Children.Add(new TextBlock
+            {
+                Text = L("Optional filters · Staff matching may be incomplete on the service",
+                    "مرشحات اختيارية · البحث باسم الفنان قد لا يكون دقيقاً في الخدمة"),
+                FontSize = 16,
+                Foreground = new SolidColorBrush(Color.FromArgb(255, 158, 176, 195))
+            });
+
+            var staff = new TextBox
+            {
+                PlaceholderText = L("Staff name", "اسم الفنان"),
+                Style = (Style)Application.Current.Resources["XmanaTextBox"],
+                Width = 520
+            };
+            var year = new TextBox
+            {
+                PlaceholderText = L("Year or range, e.g. 2000,2005", "السنة أو النطاق مثل 2000,2005"),
+                Style = (Style)Application.Current.Resources["XmanaTextBox"],
+                Width = 520
+            };
+            var rating = new TextBox
+            {
+                PlaceholderText = L("Rating filter", "مرشح التقييم"),
+                Style = (Style)Application.Current.Resources["XmanaTextBox"],
+                Width = 520
+            };
+            var category = new TextBox
+            {
+                PlaceholderText = L("Category ID(s), e.g. 57,60", "معرف التصنيف أو التصنيفات مثل 57,60"),
+                Style = (Style)Application.Current.Resources["XmanaTextBox"],
+                Width = 520
+            };
+            var type = new ComboBox { MinWidth = 250, FontSize = 19 };
+            type.Items.Add(new ComboBoxItem { Content = L("All types", "كل الأنواع"), Tag = String.Empty, IsSelected = true });
+            type.Items.Add(new ComboBoxItem { Content = L("Movies", "أفلام"), Tag = "movies" });
+            type.Items.Add(new ComboBoxItem { Content = L("Series", "مسلسلات"), Tag = "series" });
+
+            var filterRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
+            filterRow.Children.Add(staff);
+            filterRow.Children.Add(year);
+            advancedPanel.Children.Add(filterRow);
+            var secondFilterRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
+            secondFilterRow.Children.Add(rating);
+            secondFilterRow.Children.Add(category);
+            advancedPanel.Children.Add(secondFilterRow);
+            advancedPanel.Children.Add(type);
+
+            var applyAdvanced = new Button
+            {
+                Content = L("Apply filters", "تطبيق المرشحات"),
+                Style = (Style)Application.Current.Resources["XmanaButton"],
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
+            applyAdvanced.Click += async (s, e) =>
+            {
+                var selected = type.SelectedItem as ComboBoxItem;
+                await RunAdvancedSearchAsync(query.Text, staff.Text, year.Text, rating.Text,
+                    category.Text, selected?.Tag as string);
+            };
+            advancedPanel.Children.Add(applyAdvanced);
+            advancedToggle.Click += (s, e) =>
+            {
+                advancedPanel.Visibility = advancedPanel.Visibility == Visibility.Visible
+                    ? Visibility.Collapsed : Visibility.Visible;
+            };
+            PageContent.Children.Add(advancedToggle);
+            PageContent.Children.Add(advancedPanel);
             query.Focus(FocusState.Programmatic);
+        }
+
+        private async Task RunAdvancedSearchAsync(string title, string staff, string year,
+            string rating, string category, string type)
+        {
+            var filters = new Dictionary<string, string>();
+            if (!String.IsNullOrWhiteSpace(title)) filters["videoTitle"] = title.Trim();
+            if (!String.IsNullOrWhiteSpace(staff)) filters["staffTitle"] = staff.Trim();
+            if (!String.IsNullOrWhiteSpace(year)) filters["year"] = year.Trim();
+            if (!String.IsNullOrWhiteSpace(rating)) filters["star"] = rating.Trim();
+            if (!String.IsNullOrWhiteSpace(category)) filters["category_id"] = category.Trim();
+            if (!String.IsNullOrWhiteSpace(type)) filters["type"] = type;
+
+            if (filters.Count == 0)
+            {
+                AddMessage(L("Enter at least one advanced filter.", "أدخل مرشحاً متقدماً واحداً على الأقل."));
+                return;
+            }
+
+            if (!String.IsNullOrWhiteSpace(title)) state.AddSearch(title.Trim());
+            ShowBusy(L("Applying filters…", "جارٍ تطبيق المرشحات…"));
+            var items = await SafeListAsync(() => api.AdvancedSearchAsync(filters, "0", 0));
+            HideBusy();
+            while (PageContent.Children.Count > 2) PageContent.Children.RemoveAt(PageContent.Children.Count - 1);
+            AddRail(L("Advanced search results", "نتائج البحث المتقدم"), items);
+            if (items.Count == 0)
+                AddMessage(L("No titles matched these filters.", "لا توجد عناوين تطابق هذه المرشحات."));
         }
 
         private async Task RunSearchAsync(string text)
