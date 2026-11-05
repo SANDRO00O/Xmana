@@ -74,7 +74,7 @@ jobs:
           $certUtil = Join-Path $env:WINDIR 'System32\certutil.exe'
           try {
             if (-not $signtool) { throw 'Windows SDK SignTool was not found.' }
-            $packages = Get-ChildItem 'artifacts\AppPackages' -Recurse -File -Filter 'Xmana_*.appx'
+            $packages = Get-ChildItem 'artifacts\AppPackages' -Recurse -File -Filter 'Xmana_*.msix'
             if (-not $packages) { throw 'No APPX package was produced by MSBuild.' }
             foreach ($package in $packages) {
               Write-Host "Signing $($package.Name)."
@@ -98,13 +98,13 @@ jobs:
       - name: Prepare install bundle
         shell: pwsh
         run: |
-          $packages = Get-ChildItem 'artifacts\AppPackages' -Recurse -File -Filter 'Xmana_*.appx'
+          $packages = Get-ChildItem 'artifacts\AppPackages' -Recurse -File -Filter 'Xmana_*.msix'
           if (-not $packages) { throw 'No signed package remains after signing.' }
           Get-FileHash $packages.FullName -Algorithm SHA256 | Format-Table -AutoSize
           @'
           # Xbox Developer Mode install
           1. Open Xbox Device Portal while the console is in Developer Mode.
-          2. In Apps > Deploy apps, upload the signed .appx package.
+          2. In Apps > Deploy apps, upload the signed .msix package.
           3. Upload Xmana-Dev-Certificate.cer in the certificate field.
           4. Select Install. Keep the .cer with this exact build; each workflow run creates a new development certificate.
           This certificate is only for development/testing, not for Microsoft Store or production distribution.
