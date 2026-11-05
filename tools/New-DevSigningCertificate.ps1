@@ -25,8 +25,8 @@ function Invoke-CertUtil {
 
     $process = [System.Diagnostics.Process]::Start($startInfo)
     try {
-        # Adding a certificate to CurrentUser\Root may request interactive confirmation.
-        # Supply the affirmative response so the hosted runner cannot wait on a prompt.
+        # Some certificate-store operations can request interactive confirmation.
+        # Supply an affirmative response so the hosted runner cannot wait on a prompt.
         $process.StandardInput.WriteLine('Y')
         $process.StandardInput.Close()
 
@@ -56,7 +56,7 @@ $padding = [System.Security.Cryptography.RSASignaturePadding]::Pkcs1
 $subject = [System.Security.Cryptography.X500DistinguishedName]::new($publisher)
 $rsa = [System.Security.Cryptography.RSA]::Create(2048)
 $certificate = $null
-$addedStores = @()
+$certificateInstalled = $false
 $thumbprint = $null
 
 try {
@@ -103,12 +103,10 @@ try {
     [System.IO.File]::WriteAllBytes($cerPath, $cerBytes)
     $thumbprint = $certificate.Thumbprint
 
-    foreach ($storeName in @('Root', 'TrustedPeople')) {
-        Write-Host "Adding the temporary public certificate to CurrentUser\$storeName."
-        Invoke-CertUtil -Arguments @('-user', '-addstore', '-f', $storeName, $cerPath) -Action "Adding the certificate to CurrentUser\$storeName"
-        $addedStores += $storeName
-        Write-Host "Certificate added to CurrentUser\$storeName."
-    }
+    Write-Host 'Adding the temporary public certificate to CurrentUser\TrustedPeople.'
+    Invoke-CertUtil -Arguments @('-user', '-addstore', '-f', 'TrustedPeople', $cerPath) -Action 'Adding the certificate to CurrentUser\TrustedPeople'
+    $certificateInstalled = $true
+    Write-Host 'Certificate added to CurrentUser\TrustedPeople.'
 
     "::add-mask::$password" | Out-Host
     "PFX_PATH=$pfxPath" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -117,9 +115,9 @@ try {
     Write-Host "Development certificate ready. Thumbprint: $thumbprint"
 }
 catch {
-    foreach ($storeName in $addedStores) {
+    if ($certificateInstalled -and $thumbprint) {
         try {
-            Invoke-CertUtil -Arguments @('-user', '-Silent', '-delstore', $storeName, $thumbprint) -Action "Removing the certificate from CurrentUser\$storeName"
+            Invoke-CertUtil -Arguments @('-user', '-Silent', '-delstore', 'TrustedPeople', $thumbprint) -Action 'Removing the certificate from CurrentUser\TrustedPeople'
         }
         catch {
             Write-Warning $_
