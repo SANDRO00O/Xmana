@@ -89,9 +89,11 @@ jobs:
               Remove-Item -Force $env:PFX_PATH -ErrorAction SilentlyContinue
             }
             if ($env:CERT_THUMBPRINT -and (Test-Path $certUtil)) {
-              & $certUtil -user -Silent -delstore TrustedPeople $env:CERT_THUMBPRINT
-              if ($LASTEXITCODE -ne 0) {
-                Write-Warning 'Could not remove the temporary certificate from CurrentUser\TrustedPeople.'
+              foreach ($storeName in @('Root', 'TrustedPeople')) {
+                & $certUtil -user -Silent -delstore $storeName $env:CERT_THUMBPRINT
+                if ($LASTEXITCODE -ne 0) {
+                  Write-Warning "Could not remove the temporary certificate from CurrentUser\$storeName."
+                }
               }
             }
           }
