@@ -1,32 +1,36 @@
 # Implementation status
 
-## Implemented in this bootstrap
+## Implemented
 
-- Native UWP / XAML / C# project targeting x64.
+- Native UWP / XAML / C# application targeting Xbox x64.
 - TV-oriented 16:9 shell with horizontal top tabs, cinematic feature panel and poster rails.
 - D-pad focus treatments and large remote-friendly actions.
-- API client for public catalog, search, metadata, seasons/episodes, categories, groups, staff, comments, translations, skip timings and FAQ routes.
-- Exact observed JSON bodies for recommendation and rating-summary calls.
-- Discovered form-urlencoded bulk lookup retained as optional because the live response schema was not captured.
-- Tolerant video metadata mapper.
-- Home, movie, series, animation, search, local favorites, details, settings and initial player screens.
-- Arabic/English text direction switch.
-- Local favorites and language setting.
-- UWP MediaPlayerElement playback path with best-effort stream URL discovery.
-- Windows CI workflow that builds x64 APPX, creates a temporary development signing certificate, signs with SHA-256, verifies the signature and publishes the matching public certificate.
+- Public/read-oriented Cinemana API client, tolerant video metadata mapper and documented request bodies.
+- Home discovery rails, banners, featured titles, groups and popular content.
+- Movie, series, anime, search, category and category-language browsing.
+- Advanced search with documented filters and title-type selection.
+- Details pages with metadata, cast, staff pages, public comments and recommendations.
+- Series episode retrieval with a season selector and a controller-accessible episode rail.
+- Arabic/English interface direction switch.
+- Local favorites, watchlist, search history, recently viewed titles, watch history and playback progress.
+- Continue-watching and resume-from-saved-position flow.
+- UWP MediaPlayerElement playback path, dynamic quality discovery and position-preserving quality changes.
+- Periodic playback progress persistence and pause/save handling when the app is suspended.
+- Xbox x64 CI workflow for asset generation, UWP build, temporary development signing, signature verification and artifact publishing.
 
-## Not complete
+## Remaining
 
-- Physical Xbox testing and controller traversal verification.
-- Reliable playback URL parsing from a current sample response.
-- Subtitle track selection and subtitle rendering.
-- Quality selector, fallback and player error recovery.
-- Season selection and per-season episode navigation.
-- Continue-watching, resume prompt and durable playback progress.
-- SQLite cache for metadata and artwork.
-- Full advanced search, category/language filters, groups, collections and staff pages.
-- Improved localization and RTL review of every page.
+- Physical Xbox testing, including full D-pad traversal, focus visibility and long-session stability.
+- Verify the live transcoded-files response and replace best-effort signed stream URL discovery with the exact observed schema.
+- Subtitle track selection, subtitle rendering and subtitle preference persistence.
+- Player retry, quality fallback and recovery after network or decoder errors.
+- SQLite-backed metadata and artwork cache.
+- Dedicated collection browsing and deeper catalogue pagination.
+- Full RTL and localization review across every screen.
 
-## Verification status
+## Verification
 
-XML project files were parsed during local static validation. This environment cannot run Windows UWP MSBuild or deploy to an Xbox. A successful GitHub Actions run is still required to verify compilation, APPX packaging and signature verification.
+- The Windows GitHub Actions runner has successfully restored NuGet packages and compiled the UWP x64 project in the earlier validation run.
+- The earlier run produced an unsigned APPX but timed out while creating the temporary development signing certificate.
+- The signing workflow has since been changed to use certutil for certificate-store operations and to clean temporary signing material in a finally block. A new CI run is being used to validate these changes.
+- CI can validate compilation, APPX packaging, signing and signature verification. Playback, remote navigation and runtime stability still require a physical Xbox.
