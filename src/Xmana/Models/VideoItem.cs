@@ -21,6 +21,8 @@ namespace Xmana.Models
         public string Duration { get; set; }
         public string RootSeries { get; set; }
         public bool IsSeries { get; set; }
+        public double ResumeSeconds { get; set; }
+        public double PlaybackProgressPercent { get; set; }
 
         public string GetTitle(bool arabic)
         {
