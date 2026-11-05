@@ -68,21 +68,35 @@ jobs:
       - name: Sign generated APPX packages
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           $programFilesX86 = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
           $signtool = Get-ChildItem (Join-Path $programFilesX86 'Windows Kits\10\bin\*\x64\signtool.exe') | Sort-Object { [version]$_.Directory.Parent.Name } -Descending | Select-Object -First 1
-          if (-not $signtool) { throw 'Windows SDK SignTool was not found.' }
-          $packages = Get-ChildItem 'artifacts\AppPackages' -Recurse -File -Filter 'Xmana_*.appx'
-          if (-not $packages) { throw 'No APPX package was produced by MSBuild.' }
-          foreach ($package in $packages) {
-            & $signtool.FullName sign /fd SHA256 /f $env:PFX_PATH /p $env:PFX_PASSWORD $package.FullName
-            if ($LASTEXITCODE -ne 0) { throw "Signing failed for $($package.Name)." }
-            & $signtool.FullName verify /pa /v $package.FullName
-            if ($LASTEXITCODE -ne 0) { throw "Signature verification failed for $($package.Name)." }
+          $certUtil = Join-Path $env:WINDIR 'System32\certutil.exe'
+          try {
+            if (-not $signtool) { throw 'Windows SDK SignTool was not found.' }
+            $packages = Get-ChildItem 'artifacts\AppPackages' -Recurse -File -Filter 'Xmana_*.appx'
+            if (-not $packages) { throw 'No APPX package was produced by MSBuild.' }
+            foreach ($package in $packages) {
+              Write-Host "Signing $($package.Name)."
+              & $signtool.FullName sign /fd SHA256 /f $env:PFX_PATH /p $env:PFX_PASSWORD $package.FullName
+              if ($LASTEXITCODE -ne 0) { throw "Signing failed for $($package.Name)." }
+              & $signtool.FullName verify /pa /v $package.FullName
+              if ($LASTEXITCODE -ne 0) { throw "Signature verification failed for $($package.Name)." }
+            }
           }
-          Remove-Item -Force $env:PFX_PATH
-          Remove-Item -Path (Join-Path 'Cert:\CurrentUser\My' $env:CERT_THUMBPRINT) -ErrorAction SilentlyContinue
-          Get-ChildItem 'Cert:\CurrentUser\Root' | Where-Object Thumbprint -eq $env:CERT_THUMBPRINT | Remove-Item -ErrorAction SilentlyContinue
-          Get-ChildItem 'Cert:\CurrentUser\TrustedPeople' | Where-Object Thumbprint -eq $env:CERT_THUMBPRINT | Remove-Item -ErrorAction SilentlyContinue
+          finally {
+            if ($env:PFX_PATH -and (Test-Path $env:PFX_PATH)) {
+              Remove-Item -Force $env:PFX_PATH -ErrorAction SilentlyContinue
+            }
+            if ($env:CERT_THUMBPRINT -and (Test-Path $certUtil)) {
+              foreach ($storeName in @('Root', 'TrustedPeople')) {
+                & $certUtil -user -delstore $storeName $env:CERT_THUMBPRINT
+                if ($LASTEXITCODE -ne 0) {
+                  Write-Warning "Could not remove the temporary certificate from CurrentUser\$storeName."
+                }
+              }
+            }
+          }
       - name: Prepare install bundle
         shell: pwsh
         run: |
