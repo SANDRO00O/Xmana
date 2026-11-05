@@ -353,6 +353,24 @@ namespace Xmana
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center
                 });
+            if (item.PlaybackProgressPercent > 0)
+            {
+                var progressTrack = new Border
+                {
+                    Height = 5,
+                    Background = new SolidColorBrush(Color.FromArgb(170, 65, 78, 91)),
+                    VerticalAlignment = VerticalAlignment.Bottom
+                };
+                var progressFill = new Border
+                {
+                    Height = 5,
+                    Width = 154 * item.PlaybackProgressPercent / 100.0,
+                    Background = new SolidColorBrush(Color.FromArgb(255, 86, 214, 194)),
+                    HorizontalAlignment = HorizontalAlignment.Left
+                };
+                progressTrack.Child = progressFill;
+                poster.Children.Add(progressTrack);
+            }
             stack.Children.Add(poster);
             stack.Children.Add(new TextBlock
             {
@@ -660,6 +678,24 @@ namespace Xmana
                 Tag = item
             };
             play.Click += async (s, e) => await StartPlaybackAsync((VideoItem)((Button)s).Tag);
+
+            var resumeProgress = state.ResumePlayback ? state.GetProgress(item.Id) : null;
+            Button resume = null;
+            if (resumeProgress != null && resumeProgress.PositionSeconds > 15)
+            {
+                resume = new Button
+                {
+                    Content = L("Resume · ", "استئناف · ") + FormatTime(TimeSpan.FromSeconds(resumeProgress.PositionSeconds)),
+                    Style = (Style)Application.Current.Resources["XmanaButton"],
+                    Tag = new ResumeChoice { Item = item, PositionSeconds = resumeProgress.PositionSeconds }
+                };
+                resume.Click += async (s, e) =>
+                {
+                    var choice = (ResumeChoice)((Button)s).Tag;
+                    await StartPlaybackAsync(choice.Item, choice.PositionSeconds);
+                };
+            }
+
             var favorite = new Button
             {
                 Content = state.IsFavorite(item.Id) ? L("Remove from My List", "إزالة من قائمتي") :
@@ -674,7 +710,23 @@ namespace Xmana
                     L("Add to My List", "إضافة إلى قائمتي");
             };
             actions.Children.Add(play);
+            if (resume != null) actions.Children.Add(resume);
             actions.Children.Add(favorite);
+
+            var watchlist = new Button
+            {
+                Content = state.IsInWatchlist(item.Id) ? L("Remove from Watchlist", "إزالة من قائمة المشاهدة") :
+                    L("Add to Watchlist", "إضافة إلى قائمة المشاهدة"),
+                Style = (Style)Application.Current.Resources["XmanaButton"]
+            };
+            watchlist.Click += (s, e) =>
+            {
+                state.ToggleWatchlist(item.Id);
+                watchlist.Content = state.IsInWatchlist(item.Id)
+                    ? L("Remove from Watchlist", "إزالة من قائمة المشاهدة")
+                    : L("Add to Watchlist", "إضافة إلى قائمة المشاهدة");
+            };
+            actions.Children.Add(watchlist);
             PageContent.Children.Add(actions);
 
             if (item.IsSeries || (!String.IsNullOrWhiteSpace(item.RootSeries) && item.RootSeries != "0"))
@@ -713,7 +765,7 @@ namespace Xmana
             }
         }
 
-        private async Task StartPlaybackAsync(VideoItem item)
+        private async Task StartPlaybackAsync(VideoItem item, double resumeSeconds = 0)
         {
             ShowBusy(L("Preparing playback…", "جارٍ تجهيز التشغيل…"));
             try
@@ -727,7 +779,7 @@ namespace Xmana
                         "لم تُرجع الخدمة رابط بث قابل للتشغيل. لم يتم تسجيل رابط الوسائط أو حفظه."));
                     return;
                 }
-                ShowPlayer(item, uri);
+                ShowPlayer(item, uri, resumeSeconds);
             }
             catch (Exception ex)
             {
@@ -736,7 +788,7 @@ namespace Xmana
             }
         }
 
-        private void ShowPlayer(VideoItem item, Uri uri)
+        private void ShowPlayer(VideoItem item, Uri uri, double startPositionSeconds = 0)
         {
             ResetContent();
             playerTimer?.Stop();
@@ -874,7 +926,7 @@ namespace Xmana
                     AddMessage(L("Playback failed: ", "فشل تشغيل الفيديو: ") + message);
                 });
             };
-            playback.Play(uri);
+            playback.Play(uri, startPositionSeconds > 0 ? TimeSpan.FromSeconds(startPositionSeconds) : (TimeSpan?)null);
 
             playerTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             playerTimer.Tick += (s, e) => RefreshPlayerUi();
@@ -954,6 +1006,12 @@ namespace Xmana
                     TextWrapping = TextWrapping.Wrap
                 }
             });
+        }
+
+        private sealed class ResumeChoice
+        {
+            public VideoItem Item { get; set; }
+            public double PositionSeconds { get; set; }
         }
 
         private static bool IsWebUri(string value)
