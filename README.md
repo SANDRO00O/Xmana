@@ -21,11 +21,11 @@ This is a television UI, not a phone layout stretched to 16:9. Navigation lives 
 
 Use Visual Studio with the Universal Windows Platform workload and Windows 10 SDK 19041 or later. Run tools/Generate-Assets.ps1 once to create the manifest images, then open Xmana.sln, choose Release | x64, and build the package.
 
-GitHub Actions runs the Windows build, creates a short-lived self-signed code-signing certificate, signs the generated APPX using SHA-256, verifies the signature, and publishes the APPX with its matching public .cer certificate. No private key is stored in the repository.
+GitHub Actions runs the Windows build, creates a short-lived self-signed code-signing certificate, signs the generated MSIX using SHA-256, verifies the signature, and publishes the MSIX with its matching public .cer certificate. No private key is stored in the repository.
 
 ## Install on Xbox Developer Mode
 
-Download the APPX and Xmana-Dev-Certificate.cer from the same workflow artifact. In Xbox Device Portal, open Apps → Deploy apps, upload the package and select the matching certificate. Follow docs/xbox-deployment.md.
+Download the MSIX and Xmana-Dev-Certificate.cer from the same workflow artifact. In Xbox Device Portal, open Apps → Deploy apps, upload the package and select the matching certificate. Follow docs/xbox-deployment.md.
 
 The certificate is for development/testing only. It is regenerated on each build, so keep each certificate with the package created in that workflow run.
 
@@ -35,7 +35,7 @@ The client follows the public/read-oriented API paths and request shapes documen
 
 ## Status
 
-This is an initial implementation milestone, not a feature-complete media product. The API client, TV shell, catalogue views, local favorites and initial MediaPlayerElement path are present. Real Xbox hardware testing, full subtitle/quality controls, caching, playback resume and richer series navigation remain outstanding. See docs/implementation-status.md.
+This is an initial implementation milestone, not a feature-complete media product. The API client, TV shell, catalogue views, local library features, season navigation and MediaPlayerElement playback path are present. Real Xbox hardware testing, subtitle selection/rendering, playback recovery, caching, deeper collection browsing and full RTL review remain outstanding. See docs/implementation-status.md.
 
 ## License
 
