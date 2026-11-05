@@ -120,15 +120,22 @@ namespace Xmana
         {
             ResetContent();
             ShowBusy(L("Finding something worth watching…", "جارٍ تحميل المحتوى…"));
-            var featured = await SafeListAsync(() => api.GetFeaturedMoviesAsync("0"));
-            var latestMovies = await SafeListAsync(() => api.GetLatestMoviesAsync("0", 0));
-            var latestSeries = await SafeListAsync(() => api.GetLatestSeriesAsync("0", 0));
+            var featuredTask = SafeListAsync(() => api.GetFeaturedMoviesAsync("0"));
+            var moviesTask = SafeListAsync(() => api.GetLatestMoviesAsync("0", 0));
+            var seriesTask = SafeListAsync(() => api.GetLatestSeriesAsync("0", 0));
+            var newTask = SafeListAsync(() => api.GetLatestVideosItemsAsync("0", 12));
+            var homeData = await Task.WhenAll(featuredTask, moviesTask, seriesTask, newTask);
+            var featured = homeData[0];
+            var latestMovies = homeData[1];
+            var latestSeries = homeData[2];
+            var newItems = homeData[3];
             foreach (var series in latestSeries) series.IsSeries = true;
-            var newItems = await SafeListAsync(() => api.GetLatestVideosItemsAsync("0", 12));
+            var continueItems = await LoadContinueWatchingAsync();
             HideBusy();
 
             var hero = featured.FirstOrDefault() ?? latestMovies.FirstOrDefault() ?? latestSeries.FirstOrDefault();
             if (hero != null) AddHero(hero);
+            AddRail(L("Continue watching", "متابعة المشاهدة"), continueItems);
             AddRail(L("Featured movies", "أفلام مختارة"), featured);
             AddRail(L("New arrivals", "وصل حديثاً"), newItems);
             AddRail(L("Latest movies", "أحدث الأفلام"), latestMovies);
@@ -138,6 +145,28 @@ namespace Xmana
                     "الكتالوج غير متاح حالياً. تحقق من الاتصال ثم أعد المحاولة."));
         }
 
+        private async Task<List<VideoItem>> LoadContinueWatchingAsync()
+        {
+            var saved = state.PlaybackItems.Where(p => p != null && !p.Completed && p.PositionSeconds > 15)
+                .OrderByDescending(p => p.LastPlayedUtc).Take(8).ToList();
+            var tasks = saved.Select(async progress =>
+            {
+                try
+                {
+                    var token = await api.GetAllVideoInfoAsync(progress.VideoId);
+                    var item = VideoItem.FromToken(token);
+                    if (item == null) return null;
+                    item.ResumeSeconds = progress.PositionSeconds;
+                    item.PlaybackProgressPercent = progress.DurationSeconds > 0
+                        ? Math.Max(0, Math.Min(100, progress.PositionSeconds / progress.DurationSeconds * 100))
+                        : 0;
+                    return item;
+                }
+                catch { return null; }
+            });
+            var results = await Task.WhenAll(tasks);
+            return results.Where(item => item != null).ToList();
+        }
         private async Task<List<VideoItem>> SafeListAsync(Func<Task<JToken>> request)
         {
             try
@@ -372,9 +401,9 @@ namespace Xmana
             ResetContent();
             ShowBusy(L("Loading anime…", "جارٍ تحميل الأنمي…"));
             var animeMovies = await SafeListAsync(() =>
-                api.GetVideosByCategoryAndLanguageAsync("57", "22", "1", "desc", "0", 0));
+                api.GetVideosByCategoryAsync("57", "desc", "1", 0, "0"));
             var animeSeries = await SafeListAsync(() =>
-                api.GetVideosByCategoryAndLanguageAsync("57", "22", "2", "desc", "0", 0));
+                api.GetVideosByCategoryAsync("57", "desc", "2", 0, "0"));
             foreach (var series in animeSeries) series.IsSeries = true;
             var items = animeMovies.Concat(animeSeries).GroupBy(v => v.Id).Select(g => g.First()).ToList();
             HideBusy();
@@ -383,7 +412,7 @@ namespace Xmana
                 AddMessage(L("No anime items were returned for this category.",
                     "لم تُرجع فئة الأنمي أي عناصر حالياً."));
             else
-                AddRail(L("Animation catalog", "مكتبة الأنمي والرسوم المتحركة"), items);
+                AddRail(L("Animation & anime", "الأنمي والرسوم المتحركة"), items);
         }
 
         private async Task ShowCategoriesAsync()
@@ -391,7 +420,7 @@ namespace Xmana
             ResetContent();
             ShowBusy(L("Loading categories…", "جارٍ تحميل التصنيفات…"));
             JToken response = null;
-            try { response = await api.GetCategoryLanguageFrequencyAsync(); } catch { }
+            try { response = await api.GetMainCategoriesAsync(isArabic ? "ar" : "en"); } catch { }
             HideBusy();
             PageContent.Children.Add(SectionTitle(L("Browse by category", "تصفح حسب التصنيف")));
             var categories = CinemanaApiClient.AsList(response);
@@ -410,8 +439,8 @@ namespace Xmana
             };
             foreach (var entry in categories)
             {
-                var id = entry["nb"]?.ToString();
-                var title = isArabic ? entry["ar_title"]?.ToString() : entry["en_title"]?.ToString();
+                var id = ReadTokenString(entry, "nb", "id", "catNb", "categoryID", "category_id");
+                var title = ReadTokenString(entry, isArabic ? "ar_title" : "en_title", isArabic ? "en_title" : "ar_title", "title");
                 if (String.IsNullOrWhiteSpace(id) || String.IsNullOrWhiteSpace(title)) continue;
                 var button = new Button
                 {
@@ -436,6 +465,20 @@ namespace Xmana
                 return;
             }
             PageContent.Children.Add(grid);
+        }
+
+        private static string ReadTokenString(JToken token, params string[] names)
+        {
+            if (token == null) return String.Empty;
+            foreach (var name in names)
+            {
+                var value = token[name];
+                if (value == null || value.Type == JTokenType.Null ||
+                    value.Type == JTokenType.Object || value.Type == JTokenType.Array) continue;
+                var result = value.ToString();
+                if (!String.IsNullOrWhiteSpace(result)) return result;
+            }
+            return String.Empty;
         }
 
         private async Task ShowCategoryAsync(CategoryChoice category)
@@ -586,6 +629,7 @@ namespace Xmana
         {
             if (item == null) return;
             ResetContent();
+            state.AddRecentlyViewed(item.Id);
             PageContent.Children.Add(SectionTitle(item.GetTitle(isArabic)));
             var metadata = String.Join("   •   ", new[] {
                 item.Year, !String.IsNullOrWhiteSpace(item.Rating) ? "★ " + item.Rating : null,
@@ -644,10 +688,11 @@ namespace Xmana
             var seriesId = !String.IsNullOrWhiteSpace(item.RootSeries) && item.RootSeries != "0" ?
                 item.RootSeries : item.Id;
             var episodes = await SafeListAsync(() => api.GetVideoSeasonAsync(seriesId));
+            foreach (var episode in episodes) episode.RootSeries = seriesId;
             JToken seasonResponse = null;
             try { seasonResponse = await api.GetVideoSeasonNumberAsync(seriesId); } catch { }
             var seasons = CinemanaApiClient.AsList(seasonResponse)
-                .Select(x => x["season"] != null ? x["season"].ToString() : x.ToString())
+                .Select(x => x is JObject seasonObject && seasonObject["season"] != null ? seasonObject["season"].ToString() : x.ToString())
                 .Where(x => !String.IsNullOrWhiteSpace(x))
                 .Distinct()
                 .OrderBy(x => { int number; return Int32.TryParse(x, out number) ? number : Int32.MaxValue; })
