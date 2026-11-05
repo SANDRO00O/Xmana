@@ -53,7 +53,7 @@ $publisher = 'CN=Xmana Development'
 $password = ([Guid]::NewGuid().ToString('N') + 'Aa!')
 $algorithm = [System.Security.Cryptography.HashAlgorithmName]::SHA256
 $padding = [System.Security.Cryptography.RSASignaturePadding]::Pkcs1
-$subject = [System.Security.Cryptography.X500DistinguishedName]::new($publisher)
+$subject = [System.Security.Cryptography.X509Certificates.X500DistinguishedName]::new($publisher)
 $rsa = [System.Security.Cryptography.RSA]::Create(2048)
 $certificate = $null
 $certificateInstalled = $false
