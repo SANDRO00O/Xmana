@@ -90,7 +90,7 @@ jobs:
             }
             if ($env:CERT_THUMBPRINT -and (Test-Path $certUtil)) {
               foreach ($storeName in @('Root', 'TrustedPeople')) {
-                & $certUtil -user -delstore $storeName $env:CERT_THUMBPRINT
+                & $certUtil -user -Silent -delstore $storeName $env:CERT_THUMBPRINT
                 if ($LASTEXITCODE -ne 0) {
                   Write-Warning "Could not remove the temporary certificate from CurrentUser\$storeName."
                 }
