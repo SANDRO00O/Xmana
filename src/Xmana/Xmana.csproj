@@ -38,6 +38,7 @@
     <Compile Include="App.xaml.cs"><DependentUpon>App.xaml</DependentUpon></Compile>
     <Compile Include="MainPage.xaml.cs"><DependentUpon>MainPage.xaml</DependentUpon></Compile>
     <Compile Include="Models\VideoItem.cs" />
+    <Compile Include="Models\ApiRequests.cs" />
     <Compile Include="Services\CinemanaApiClient.cs" />
     <Compile Include="Services\LocalStateStore.cs" />
     <Compile Include="Services\PlaybackService.cs" />
