@@ -13,13 +13,13 @@ This is a television UI, not a phone layout stretched to 16:9. Navigation lives 
 - Xmana.sln — Visual Studio solution.
 - src/Xmana — UWP x64 app.
 - API.md — observed public Cinemana API reference used by the client.
-- PROMPT.md — product requirements and scope.
+- docs/implementation-status.md — implemented features and remaining work.
 - docs/ — architecture, API verification, playback and Xbox deployment notes.
 - .github/workflows/build-xbox.yml — x64 package build and development signing.
 
 ## Build
 
-Use Visual Studio with the Universal Windows Platform workload and Windows 10 SDK 19041 or later. Open Xmana.sln, choose Release | x64, and build the package.
+Use Visual Studio with the Universal Windows Platform workload and Windows 10 SDK 19041 or later. Run tools/Generate-Assets.ps1 once to create the manifest images, then open Xmana.sln, choose Release | x64, and build the package.
 
 GitHub Actions runs the Windows build, creates a short-lived self-signed code-signing certificate, signs the generated APPX using SHA-256, verifies the signature, and publishes the APPX with its matching public .cer certificate. No private key is stored in the repository.
 
