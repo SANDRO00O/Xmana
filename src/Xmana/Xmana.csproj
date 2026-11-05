@@ -4,6 +4,8 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
+    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
     <ProjectGuid>{3B7CF3B9-7B26-4E8C-B36E-1E6F48B63E0D}</ProjectGuid>
     <OutputType>AppContainerExe</OutputType>
     <RootNamespace>Xmana</RootNamespace>
