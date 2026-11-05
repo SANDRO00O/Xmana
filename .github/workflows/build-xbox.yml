@@ -19,7 +19,8 @@ jobs:
       - name: Install Universal Windows Platform MSBuild support
         shell: pwsh
         run: |
-          $installerRoot = Join-Path $env:ProgramFiles 'Microsoft Visual Studio\Installer'
+          $programFilesX86 = [Environment]::GetFolderPath('ProgramFilesX86')
+          $installerRoot = Join-Path $programFilesX86 'Microsoft Visual Studio\Installer'
           $vswhere = Join-Path $installerRoot 'vswhere.exe'
           $installer = Join-Path $installerRoot 'vs_installer.exe'
           if (-not (Test-Path $vswhere)) { throw "vswhere.exe was not found at $vswhere" }
@@ -38,7 +39,7 @@ jobs:
           if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) {
             throw "Adding UWP MSBuild support failed with exit code $($process.ExitCode)."
           }
-          $targets = Join-Path $env:ProgramFiles(x86) 'MSBuild\Microsoft\WindowsXaml'
+          $targets = Join-Path $programFilesX86 'MSBuild\Microsoft\WindowsXaml'
           if (-not (Test-Path $targets)) {
             throw "UWP XAML MSBuild targets were not installed under $targets."
           }
