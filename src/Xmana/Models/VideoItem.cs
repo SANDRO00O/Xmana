@@ -22,6 +22,7 @@ namespace Xmana.Models
         public string Duration { get; set; }
         public string RootSeries { get; set; }
         public string ImdbReference { get; set; }
+        public string Trailer { get; set; }
         public string VideoViews { get; set; }
         public string VideoLikes { get; set; }
         public string VideoDislikes { get; set; }
@@ -76,6 +77,7 @@ namespace Xmana.Models
                 Duration = Read(token, "duration"),
                 RootSeries = Read(token, "rootSeries"),
                 ImdbReference = Read(token, "imdbUrlRef"),
+                Trailer = Read(token, "trailer"),
                 VideoViews = Read(token, "videoViewsNumber"),
                 VideoLikes = Read(token, "videoLikesNumber"),
                 VideoDislikes = Read(token, "videoDisLikesNumber"),
