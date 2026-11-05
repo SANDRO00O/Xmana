@@ -65,7 +65,7 @@ namespace Xmana
             {
                 case "Home": await ShowHomeAsync(); break;
                 case "Movies": await ShowListingAsync(L("Movies", "الأفلام"), () => api.GetLatestMoviesAsync("0", 0)); break;
-                case "Series": await ShowListingAsync(L("Series", "المسلسلات"), () => api.GetLatestSeriesAsync("0", 0)); break;
+                case "Series": await ShowListingAsync(L("Series", "المسلسلات"), () => api.GetLatestSeriesAsync("0", 0), true); break;
                 case "Anime": await ShowAnimeAsync(); break;
                 case "Search": ShowSearch(); break;
                 case "Library": ShowLibrary(); break;
@@ -114,6 +114,7 @@ namespace Xmana
             var featured = await SafeListAsync(() => api.GetFeaturedMoviesAsync("0"));
             var latestMovies = await SafeListAsync(() => api.GetLatestMoviesAsync("0", 0));
             var latestSeries = await SafeListAsync(() => api.GetLatestSeriesAsync("0", 0));
+            foreach (var series in latestSeries) series.IsSeries = true;
             var newItems = await SafeListAsync(() => api.GetLatestVideosItemsAsync("0", 12));
             HideBusy();
 
@@ -341,11 +342,12 @@ namespace Xmana
             return button;
         }
 
-        private async Task ShowListingAsync(string heading, Func<Task<JToken>> request)
+        private async Task ShowListingAsync(string heading, Func<Task<JToken>> request, bool isSeries = false)
         {
             ResetContent();
             ShowBusy(L("Loading catalog…", "جارٍ تحميل القائمة…"));
             var items = await SafeListAsync(request);
+            if (isSeries) foreach (var item in items) item.IsSeries = true;
             HideBusy();
             PageContent.Children.Add(SectionTitle(heading));
             if (items.Count == 0)
@@ -360,8 +362,12 @@ namespace Xmana
         {
             ResetContent();
             ShowBusy(L("Loading anime…", "جارٍ تحميل الأنمي…"));
-            var items = await SafeListAsync(() =>
-                api.GetVideosByCategoryAsync("57", "desc", "1", 36, "0"));
+            var animeMovies = await SafeListAsync(() =>
+                api.GetVideosByCategoryAndLanguageAsync("57", "22", "1", "desc", "0", 36));
+            var animeSeries = await SafeListAsync(() =>
+                api.GetVideosByCategoryAndLanguageAsync("57", "22", "2", "desc", "0", 36));
+            foreach (var series in animeSeries) series.IsSeries = true;
+            var items = animeMovies.Concat(animeSeries).GroupBy(v => v.Id).Select(g => g.First()).ToList();
             HideBusy();
             PageContent.Children.Add(SectionTitle(L("Anime", "الأنمي")));
             if (items.Count == 0)
@@ -543,7 +549,7 @@ namespace Xmana
             actions.Children.Add(favorite);
             PageContent.Children.Add(actions);
 
-            if (item.Kind == "2" || (!String.IsNullOrWhiteSpace(item.RootSeries) && item.RootSeries != "0"))
+            if (item.IsSeries || (!String.IsNullOrWhiteSpace(item.RootSeries) && item.RootSeries != "0"))
                 await AddEpisodesAsync(item);
             var related = await SafeListAsync(() => api.GetRelatedVideosAsync(item.Id, "1", "0"));
             AddRail(L("You may also like", "قد يعجبك أيضاً"), related);
