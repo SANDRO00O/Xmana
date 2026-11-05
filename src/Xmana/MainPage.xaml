@@ -28,6 +28,7 @@
         <Button Content="Movies" Tag="Movies" Style="{StaticResource XmanaButton}" Click="Navigation_Click" GotFocus="Navigation_GotFocus" />
         <Button Content="Series" Tag="Series" Style="{StaticResource XmanaButton}" Click="Navigation_Click" GotFocus="Navigation_GotFocus" />
         <Button Content="Anime" Tag="Anime" Style="{StaticResource XmanaButton}" Click="Navigation_Click" GotFocus="Navigation_GotFocus" />
+        <Button Content="Categories" Tag="Categories" Style="{StaticResource XmanaButton}" Click="Navigation_Click" GotFocus="Navigation_GotFocus" />
         <Button Content="Search" Tag="Search" Style="{StaticResource XmanaButton}" Click="Navigation_Click" GotFocus="Navigation_GotFocus" />
         <Button Content="My List" Tag="Library" Style="{StaticResource XmanaButton}" Click="Navigation_Click" GotFocus="Navigation_GotFocus" />
       </StackPanel>
