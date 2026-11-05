@@ -20,6 +20,7 @@ namespace Xmana.Models
         public string Rating { get; set; }
         public string Duration { get; set; }
         public string RootSeries { get; set; }
+        public bool IsSeries { get; set; }
 
         public string GetTitle(bool arabic)
         {
