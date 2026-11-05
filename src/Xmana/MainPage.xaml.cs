@@ -120,29 +120,61 @@ namespace Xmana
         {
             ResetContent();
             ShowBusy(L("Finding something worth watching…", "جارٍ تحميل المحتوى…"));
+            var bannerTask = SafeListAsync(() => api.GetBannersAsync("0"));
             var featuredTask = SafeListAsync(() => api.GetFeaturedMoviesAsync("0"));
             var moviesTask = SafeListAsync(() => api.GetLatestMoviesAsync("0", 0));
             var seriesTask = SafeListAsync(() => api.GetLatestSeriesAsync("0", 0));
-            var newTask = SafeListAsync(() => api.GetLatestVideosItemsAsync("0", 12));
-            var homeData = await Task.WhenAll(featuredTask, moviesTask, seriesTask, newTask);
-            var featured = homeData[0];
-            var latestMovies = homeData[1];
-            var latestSeries = homeData[2];
-            var newItems = homeData[3];
+            var newTask = SafeListAsync(() => api.GetNewlyVideosItemsAsync("0", 12));
+            var latestTask = SafeListAsync(() => api.GetLatestVideosItemsAsync("0", 12));
+            var homeData = await Task.WhenAll(bannerTask, featuredTask, moviesTask, seriesTask, newTask, latestTask);
+            var banners = homeData[0];
+            var featured = homeData[1];
+            var latestMovies = homeData[2];
+            var latestSeries = homeData[3];
+            var newItems = homeData[4];
+            var latestItems = homeData[5];
             foreach (var series in latestSeries) series.IsSeries = true;
             var continueItems = await LoadContinueWatchingAsync();
             HideBusy();
 
-            var hero = featured.FirstOrDefault() ?? latestMovies.FirstOrDefault() ?? latestSeries.FirstOrDefault();
+            var hero = banners.FirstOrDefault() ?? featured.FirstOrDefault() ??
+                latestMovies.FirstOrDefault() ?? latestSeries.FirstOrDefault();
             if (hero != null) AddHero(hero);
             AddRail(L("Continue watching", "متابعة المشاهدة"), continueItems);
             AddRail(L("Featured movies", "أفلام مختارة"), featured);
-            AddRail(L("New arrivals", "وصل حديثاً"), newItems);
+            AddRail(L("Newly added", "أضيف حديثاً"), newItems);
+            AddRail(L("Latest updates", "آخر الإضافات"), latestItems);
             AddRail(L("Latest movies", "أحدث الأفلام"), latestMovies);
             AddRail(L("Latest series", "أحدث المسلسلات"), latestSeries);
+
+            await AddHomeGroupRailsAsync();
+            var popular = await SafeListAsync(() => api.GetPopularFilmsAsync("M", "0", 0));
+            AddRail(L("Popular this month", "الأكثر شعبية هذا الشهر"), popular);
+
             if (hero == null && latestMovies.Count == 0 && latestSeries.Count == 0)
                 AddMessage(L("The catalog is unavailable right now. Check your connection and try again.",
                     "الكتالوج غير متاح حالياً. تحقق من الاتصال ثم أعد المحاولة."));
+        }
+
+        private async Task AddHomeGroupRailsAsync()
+        {
+            var response = await SafeTokenAsync(() => api.GetVideoGroupsAsync(isArabic ? "ar" : "en", "0"));
+            var groups = CinemanaApiClient.AsList(response).Take(5).ToList();
+            foreach (var group in groups)
+            {
+                var title = ReadTokenString(group, "title");
+                var groupId = ReadTokenString(group, "groupsID");
+                var items = CinemanaApiClient.AsList(group["content"])
+                    .Select(VideoItem.FromToken)
+                    .Where(item => item != null && !String.IsNullOrWhiteSpace(item.Id))
+                    .ToList();
+
+                if (items.Count == 0 && !String.IsNullOrWhiteSpace(groupId))
+                    items = await SafeListAsync(() => api.GetGroupPageAsync(groupId, "0", 0));
+
+                if (!String.IsNullOrWhiteSpace(title))
+                    AddRail(title, items);
+            }
         }
 
         private async Task<List<VideoItem>> LoadContinueWatchingAsync()
