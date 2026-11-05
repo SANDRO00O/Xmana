@@ -641,29 +641,6 @@ namespace Xmana
             return String.Empty;
         }
 
-        private async Task ShowCategoryAsync(CategoryChoice category)
-        {
-            ResetContent();
-            ShowBusy(L("Loading category…", "جارٍ تحميل التصنيف…"));
-            var movies = await SafeListAsync(() =>
-                api.GetVideosByCategoryAsync(category.Id, "desc", "1", 0, "0"));
-            var series = await SafeListAsync(() =>
-                api.GetVideosByCategoryAsync(category.Id, "desc", "2", 0, "0"));
-            foreach (var item in series) item.IsSeries = true;
-            HideBusy();
-            PageContent.Children.Add(SectionTitle(category.Title));
-            AddRail(L("Movies", "الأفلام"), movies);
-            AddRail(L("Series", "المسلسلات"), series);
-            if (movies.Count == 0 && series.Count == 0)
-                AddMessage(L("No titles were returned for this category.", "لم تُرجع هذه الفئة عناوين."));
-        }
-
-        private sealed class CategoryChoice
-        {
-            public string Id { get; set; }
-            public string Title { get; set; }
-        }
-
         private void ShowSearch()
         {
             ResetContent();
