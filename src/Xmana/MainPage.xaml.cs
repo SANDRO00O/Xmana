@@ -393,16 +393,13 @@ namespace Xmana
                 return;
             }
 
-            var grid = new GridView
+            var grid = new WrapGrid
             {
-                ItemsSource = null,
-                IsItemClickEnabled = true,
-                SelectionMode = ListViewSelectionMode.None,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                ItemClick = null
+                ItemWidth = 310,
+                ItemHeight = 92,
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Stretch
             };
-            var wrap = new WrapGrid { ItemWidth = 310, ItemHeight = 92, Orientation = Orientation.Horizontal };
-            grid.ItemsPanel = new ItemsPanelTemplate(() => wrap);
             foreach (var entry in categories)
             {
                 var id = entry["nb"]?.ToString();
@@ -422,10 +419,10 @@ namespace Xmana
                     var choice = (CategoryChoice)((Button)s).Tag;
                     await ShowCategoryAsync(choice);
                 };
-                grid.Items.Add(button);
+                grid.Children.Add(button);
             }
 
-            if (grid.Items.Count == 0)
+            if (grid.Children.Count == 0)
             {
                 AddMessage(L("No category entries could be read from the response.", "تعذر قراءة عناصر التصنيف من الاستجابة."));
                 return;
