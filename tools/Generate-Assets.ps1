@@ -15,7 +15,7 @@ function New-RoundedPath([System.Drawing.RectangleF]$rect, [single]$radius) {
 }
 
 function New-XmanaAsset([int]$width, [int]$height, [string]$fileName, [bool]$wide) {
-    $bitmap = New-Object System.Drawing.Bitmap($width, $height)
+    $bitmap = [System.Drawing.Bitmap]::new($width, $height)
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
     $graphics.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
