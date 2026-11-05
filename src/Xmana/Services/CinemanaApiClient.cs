@@ -142,9 +142,9 @@ namespace Xmana.Services
         public Task<JToken> GetFaqAsync() => GetAsync("faqQuestion");
 
         // Discovered in frontend extraction; response schema was not live-verified.
-        public Task<JToken> GetVideosByIdsAsync(IEnumerable<string> ids) =>
+        public Task<JToken> GetVideosByIdsAsync(string ids) =>
             PostFormAsync("getVideosByIds", new Dictionary<string, string> {
-                { "ids", String.Join(",", ids ?? Enumerable.Empty<string>()) }
+                { "ids", ids ?? String.Empty }
             });
 
         public Task<JToken> GetRecommendationsAsync(string videoId, string title) =>
