@@ -745,17 +745,19 @@ namespace Xmana
             var favorites = state.Favorites.ToList();
             var watchlist = state.Watchlist.ToList();
             var recent = state.RecentlyViewed.ToList();
-            if (favorites.Count == 0 && watchlist.Count == 0 && recent.Count == 0)
+            var history = state.WatchHistory.Select(entry => entry.VideoId)
+                .Where(id => !String.IsNullOrWhiteSpace(id)).Distinct().Take(30).ToList();
+            if (favorites.Count == 0 && watchlist.Count == 0 && recent.Count == 0 && history.Count == 0)
             {
                 AddMessage(L("Your collection is empty. Save a title from its details page.",
                     "مكتبتك فارغة. احفظ أي عنوان من صفحة التفاصيل."));
                 return;
             }
             ShowBusy(L("Restoring your collection…", "جارٍ استعادة مكتبتك…"));
-            _ = LoadLibraryAsync(favorites, watchlist, recent);
+            _ = LoadLibraryAsync(favorites, watchlist, recent, history);
         }
 
-        private async Task LoadLibraryAsync(IList<string> favorites, IList<string> watchlist, IList<string> recent)
+        private async Task LoadLibraryAsync(IList<string> favorites, IList<string> watchlist, IList<string> recent, IList<string> history)
         {
             var cache = new Dictionary<string, VideoItem>(StringComparer.OrdinalIgnoreCase);
             async Task<List<VideoItem>> Resolve(IList<string> ids)
@@ -785,11 +787,14 @@ namespace Xmana
             var favoriteItems = await Resolve(favorites);
             var watchlistItems = await Resolve(watchlist);
             var recentItems = await Resolve(recent);
+            var historyItems = await Resolve(history);
             HideBusy();
+            AddRail(L("Continue watching", "متابعة المشاهدة"), await LoadContinueWatchingAsync());
             AddRail(L("Favorites", "المفضلة"), favoriteItems);
             AddRail(L("Watchlist", "قائمة المشاهدة"), watchlistItems);
+            AddRail(L("Watch history", "سجل المشاهدة"), historyItems);
             AddRail(L("Recently viewed", "شوهدت مؤخراً"), recentItems);
-            if (favoriteItems.Count + watchlistItems.Count + recentItems.Count == 0)
+            if (favoriteItems.Count + watchlistItems.Count + recentItems.Count + historyItems.Count == 0)
                 AddMessage(L("Saved titles could not be loaded from the service.",
                     "تعذر تحميل العناوين المحفوظة من الخدمة."));
         }
