@@ -927,6 +927,33 @@ namespace Xmana
             };
             PageContent.Children.Add(language);
 
+            var qualityPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 14,
+                Margin = new Thickness(0, 12, 0, 12)
+            };
+            qualityPanel.Children.Add(new TextBlock
+            {
+                Text = L("Preferred quality", "الجودة المفضلة"),
+                FontSize = 19,
+                Foreground = new SolidColorBrush(Color.FromArgb(255, 190, 202, 215)),
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            var preferredQuality = new ComboBox { MinWidth = 220, FontSize = 18 };
+            foreach (var value in new[] { "Auto", "1080p", "720p", "480p", "360p", "240p" })
+                preferredQuality.Items.Add(new ComboBoxItem { Content = value, Tag = value });
+            var currentQuality = preferredQuality.Items.OfType<ComboBoxItem>()
+                .FirstOrDefault(x => String.Equals(x.Tag as string, state.PreferredQuality, StringComparison.OrdinalIgnoreCase));
+            preferredQuality.SelectedItem = currentQuality ?? preferredQuality.Items[0];
+            preferredQuality.SelectionChanged += (s, e) =>
+            {
+                var choice = preferredQuality.SelectedItem as ComboBoxItem;
+                if (choice != null) state.PreferredQuality = choice.Tag as string ?? "Auto";
+            };
+            qualityPanel.Children.Add(preferredQuality);
+            PageContent.Children.Add(qualityPanel);
+
             var resume = new Button
             {
                 Content = state.ResumePlayback
@@ -957,8 +984,23 @@ namespace Xmana
                 resetProgress.Content = L("Progress cleared", "تم مسح التقدم");
             };
             PageContent.Children.Add(resetProgress);
-            AddMessage(L("Xmana stores favorites, watchlist, recent searches, viewed titles and playback progress locally. It does not sign in to a Cinemana account.",
-                "يحفظ Xmana المفضلة وقائمة المشاهدة والبحث الأخير والعناوين المشاهدة وتقدم التشغيل محلياً. لا يسجل الدخول إلى حساب Cinemana."));
+
+            var resetHistory = new Button
+            {
+                Content = L("Clear watch history", "مسح سجل المشاهدة"),
+                Style = (Style)Application.Current.Resources["XmanaButton"],
+                HorizontalAlignment = HorizontalAlignment.Left
+            };
+            resetHistory.Click += (s, e) =>
+            {
+                state.ClearWatchHistory();
+                resetHistory.IsEnabled = false;
+                resetHistory.Content = L("Watch history cleared", "تم مسح سجل المشاهدة");
+            };
+            PageContent.Children.Add(resetHistory);
+
+            AddMessage(L("Xmana is an unofficial, local-only client. Favorites, watchlist, search history, viewed titles, playback progress and preferences stay on this console. No account login or cloud sync is used.",
+                "Xmana عميل مستقل وغير رسمي ويعمل محلياً. تبقى المفضلة وقائمة المشاهدة وسجل البحث والعناوين المشاهدة وتقدم التشغيل والتفضيلات على هذا الجهاز. لا يستخدم تسجيل الدخول أو المزامنة السحابية."));
             var faq = new Button
             {
                 Content = L("Load FAQ", "تحميل الأسئلة الشائعة"),
