@@ -874,13 +874,41 @@ namespace Xmana
 
         private async Task ShowDetailsAsync(VideoItem item)
         {
-            if (item == null) return;
+            if (item == null || String.IsNullOrWhiteSpace(item.Id)) return;
+            var wasSeries = item.IsSeries;
+            var cachedProgress = state.GetProgress(item.Id);
+            var detailsToken = await SafeTokenAsync(() => api.GetAllVideoInfoAsync(item.Id));
+            var fullDetails = VideoItem.FromToken(detailsToken);
+            if (fullDetails != null)
+            {
+                fullDetails.IsSeries = wasSeries;
+                if (String.IsNullOrWhiteSpace(fullDetails.RootSeries)) fullDetails.RootSeries = item.RootSeries;
+                if (String.IsNullOrWhiteSpace(fullDetails.Poster)) fullDetails.Poster = item.Poster;
+                item = fullDetails;
+            }
+
             ResetContent();
             state.AddRecentlyViewed(item.Id);
+            if (!String.IsNullOrWhiteSpace(item.Backdrop) && IsWebUri(item.Backdrop))
+            {
+                var artwork = new Image
+                {
+                    Source = new BitmapImage(new Uri(item.Backdrop)),
+                    Stretch = Stretch.UniformToFill,
+                    Height = 330,
+                    MaxHeight = 330,
+                    HorizontalAlignment = HorizontalAlignment.Stretch
+                };
+                PageContent.Children.Add(artwork);
+            }
+
             PageContent.Children.Add(SectionTitle(item.GetTitle(isArabic)));
             var metadata = String.Join("   •   ", new[] {
-                item.Year, !String.IsNullOrWhiteSpace(item.Rating) ? "★ " + item.Rating : null,
-                item.Duration
+                item.Year,
+                !String.IsNullOrWhiteSpace(item.Rating) ? "★ " + item.Rating : null,
+                item.Duration,
+                !String.IsNullOrWhiteSpace(item.Season) ? L("Season ", "الموسم ") + item.Season : null,
+                !String.IsNullOrWhiteSpace(item.EpisodeNumber) ? L("Episode ", "الحلقة ") + item.EpisodeNumber : null
             }.Where(x => !String.IsNullOrWhiteSpace(x)));
             if (!String.IsNullOrWhiteSpace(metadata))
                 PageContent.Children.Add(new TextBlock
@@ -899,6 +927,19 @@ namespace Xmana
                     MaxWidth = 1200
                 });
 
+            var categoryNames = item.Categories.Select(category => category.GetTitle(isArabic))
+                .Where(value => !String.IsNullOrWhiteSpace(value)).ToList();
+            if (categoryNames.Count > 0)
+                AddMessage(L("Genres: ", "التصنيفات: ") + String.Join("  ·  ", categoryNames));
+            if (item.Language != null)
+            {
+                var language = isArabic
+                    ? (item.Language.ArabicTitle ?? item.Language.EnglishTitle)
+                    : (item.Language.EnglishTitle ?? item.Language.ArabicTitle);
+                if (!String.IsNullOrWhiteSpace(language))
+                    AddMessage(L("Language: ", "اللغة: ") + language);
+            }
+
             var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 14 };
             var play = new Button
             {
@@ -908,7 +949,7 @@ namespace Xmana
             };
             play.Click += async (s, e) => await StartPlaybackAsync((VideoItem)((Button)s).Tag);
 
-            var resumeProgress = state.ResumePlayback ? state.GetProgress(item.Id) : null;
+            var resumeProgress = state.ResumePlayback ? cachedProgress : null;
             Button resume = null;
             if (resumeProgress != null && resumeProgress.PositionSeconds > 15)
             {
@@ -927,21 +968,17 @@ namespace Xmana
 
             var favorite = new Button
             {
-                Content = state.IsFavorite(item.Id) ? L("Remove from My List", "إزالة من قائمتي") :
-                    L("Add to My List", "إضافة إلى قائمتي"),
-                Style = (Style)Application.Current.Resources["XmanaButton"],
-                Tag = item
+                Content = state.IsFavorite(item.Id) ? L("Remove from Favorites", "إزالة من المفضلة") :
+                    L("Add to Favorites", "إضافة إلى المفضلة"),
+                Style = (Style)Application.Current.Resources["XmanaButton"]
             };
             favorite.Click += (s, e) =>
             {
                 state.ToggleFavorite(item.Id);
-                favorite.Content = state.IsFavorite(item.Id) ? L("Remove from My List", "إزالة من قائمتي") :
-                    L("Add to My List", "إضافة إلى قائمتي");
+                favorite.Content = state.IsFavorite(item.Id)
+                    ? L("Remove from Favorites", "إزالة من المفضلة")
+                    : L("Add to Favorites", "إضافة إلى المفضلة");
             };
-            actions.Children.Add(play);
-            if (resume != null) actions.Children.Add(resume);
-            actions.Children.Add(favorite);
-
             var watchlist = new Button
             {
                 Content = state.IsInWatchlist(item.Id) ? L("Remove from Watchlist", "إزالة من قائمة المشاهدة") :
@@ -955,13 +992,150 @@ namespace Xmana
                     ? L("Remove from Watchlist", "إزالة من قائمة المشاهدة")
                     : L("Add to Watchlist", "إضافة إلى قائمة المشاهدة");
             };
+            actions.Children.Add(play);
+            if (resume != null) actions.Children.Add(resume);
+            actions.Children.Add(favorite);
             actions.Children.Add(watchlist);
             PageContent.Children.Add(actions);
 
+            AddStaffSection(L("Cast", "طاقم التمثيل"), item.Actors);
+            AddStaffSection(L("Directors", "المخرجون"), item.Directors);
+            AddStaffSection(L("Writers", "الكتّاب"), item.Writers);
+
             if (item.IsSeries || (!String.IsNullOrWhiteSpace(item.RootSeries) && item.RootSeries != "0"))
                 await AddEpisodesAsync(item);
-            var related = await SafeListAsync(() => api.GetRelatedVideosAsync(item.Id, "1", "0"));
-            AddRail(L("You may also like", "قد يعجبك أيضاً"), related);
+
+            var comments = await SafeTokenAsync(() => api.GetVideoCommentsAsync(item.Id, 10, 0));
+            AddCommentsSection(comments);
+
+            var recommendations = await SafeListAsync(() =>
+                api.GetRecommendationsAsync(item.Id, item.GetTitle(isArabic)));
+            if (recommendations.Count == 0)
+                recommendations = await SafeListAsync(() => api.GetRelatedVideosAsync(item.Id, "1", "0"));
+            AddRail(L("Recommended for you", "مقترح لك"), recommendations);
+        }
+
+        private void AddStaffSection(string heading, IList<StaffItem> staff)
+        {
+            if (staff == null || staff.Count == 0) return;
+            var section = new StackPanel { Spacing = 12 };
+            section.Children.Add(new TextBlock
+            {
+                Text = heading,
+                FontSize = 23,
+                FontWeight = Windows.UI.Text.FontWeights.SemiBold,
+                Foreground = new SolidColorBrush(Colors.White)
+            });
+            var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
+            foreach (var person in staff)
+            {
+                var label = String.IsNullOrWhiteSpace(person.Role)
+                    ? person.Name
+                    : person.Name + " · " + person.Role;
+                if (String.IsNullOrWhiteSpace(label)) continue;
+                if (String.IsNullOrWhiteSpace(person.Id))
+                {
+                    row.Children.Add(new TextBlock
+                    {
+                        Text = label,
+                        FontSize = 17,
+                        Foreground = new SolidColorBrush(Color.FromArgb(255, 205, 215, 226)),
+                        Margin = new Thickness(8, 12, 8, 12)
+                    });
+                    continue;
+                }
+
+                var button = new Button
+                {
+                    Content = label,
+                    Tag = person,
+                    Style = (Style)Application.Current.Resources["XmanaButton"]
+                };
+                button.Click += async (s, e) => await ShowStaffAsync((StaffItem)((Button)s).Tag);
+                row.Children.Add(button);
+            }
+            if (row.Children.Count > 0)
+            {
+                section.Children.Add(row);
+                PageContent.Children.Add(section);
+            }
+        }
+
+        private async Task ShowStaffAsync(StaffItem person)
+        {
+            if (person == null || String.IsNullOrWhiteSpace(person.Id)) return;
+            ResetContent();
+            PageContent.Children.Add(SectionTitle(person.Name ?? L("Staff", "الفنان")));
+            if (!String.IsNullOrWhiteSpace(person.Role))
+                AddMessage(person.Role);
+            ShowBusy(L("Loading associated works…", "جارٍ تحميل الأعمال المرتبطة…"));
+            var response = await SafeTokenAsync(() =>
+                api.GetStaffAsync(person.Id, isArabic ? "ar" : "en", "0"));
+            HideBusy();
+            var items = CinemanaApiClient.AsList(response)
+                .Select(VideoItem.FromToken)
+                .Where(item => item != null && !String.IsNullOrWhiteSpace(item.Id))
+                .ToList();
+            AddRail(L("Associated works", "الأعمال المرتبطة"), items);
+            if (items.Count == 0)
+                AddMessage(L("No associated titles were returned.", "لم تُرجع الخدمة عناوين مرتبطة."));
+        }
+
+        private void AddCommentsSection(JToken response)
+        {
+            var comments = CinemanaApiClient.AsList(response).ToList();
+            var section = new StackPanel { Spacing = 10 };
+            section.Children.Add(new TextBlock
+            {
+                Text = L("Public comments", "التعليقات العامة"),
+                FontSize = 23,
+                FontWeight = Windows.UI.Text.FontWeights.SemiBold,
+                Foreground = new SolidColorBrush(Colors.White)
+            });
+            if (comments.Count == 0)
+            {
+                section.Children.Add(new TextBlock
+                {
+                    Text = L("No public comments are available.", "لا توجد تعليقات عامة متاحة."),
+                    FontSize = 17,
+                    Foreground = new SolidColorBrush(Color.FromArgb(255, 150, 165, 181))
+                });
+            }
+            else
+            {
+                foreach (var comment in comments.Take(10))
+                {
+                    var author = ReadTokenString(comment, "userName", "name", "user");
+                    var body = ReadTokenString(comment, "comment", "text", "content", "commentText");
+                    if (String.IsNullOrWhiteSpace(body)) continue;
+                    section.Children.Add(new Border
+                    {
+                        Background = new SolidColorBrush(Color.FromArgb(255, 20, 25, 35)),
+                        Padding = new Thickness(18),
+                        Child = new StackPanel
+                        {
+                            Spacing = 6,
+                            Children =
+                            {
+                                new TextBlock
+                                {
+                                    Text = author,
+                                    FontSize = 15,
+                                    Foreground = new SolidColorBrush(Color.FromArgb(255, 128, 214, 202))
+                                },
+                                new TextBlock
+                                {
+                                    Text = body,
+                                    FontSize = 17,
+                                    TextWrapping = TextWrapping.Wrap,
+                                    Foreground = new SolidColorBrush(Color.FromArgb(255, 221, 228, 236))
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            PageContent.Children.Add(section);
         }
 
         private async Task AddEpisodesAsync(VideoItem item)
