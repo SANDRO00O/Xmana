@@ -56,7 +56,7 @@ $padding = [System.Security.Cryptography.RSASignaturePadding]::Pkcs1
 $subject = [System.Security.Cryptography.X509Certificates.X500DistinguishedName]::new($publisher)
 $rsa = [System.Security.Cryptography.RSA]::Create(2048)
 $certificate = $null
-$certificateInstalled = $false
+$installedStores = @()
 $thumbprint = $null
 
 try {
@@ -103,10 +103,12 @@ try {
     [System.IO.File]::WriteAllBytes($cerPath, $cerBytes)
     $thumbprint = $certificate.Thumbprint
 
-    Write-Host 'Adding the temporary public certificate to CurrentUser\TrustedPeople.'
-    Invoke-CertUtil -Arguments @('-user', '-addstore', '-f', 'TrustedPeople', $cerPath) -Action 'Adding the certificate to CurrentUser\TrustedPeople'
-    $certificateInstalled = $true
-    Write-Host 'Certificate added to CurrentUser\TrustedPeople.'
+    foreach ($storeName in @('Root', 'TrustedPeople')) {
+        Write-Host "Adding the temporary public certificate to CurrentUser\$storeName."
+        Invoke-CertUtil -Arguments @('-user', '-addstore', '-f', $storeName, $cerPath) -Action "Adding the certificate to CurrentUser\$storeName"
+        $installedStores += $storeName
+        Write-Host "Certificate added to CurrentUser\$storeName."
+    }
 
     "::add-mask::$password" | Out-Host
     "PFX_PATH=$pfxPath" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -115,9 +117,9 @@ try {
     Write-Host "Development certificate ready. Thumbprint: $thumbprint"
 }
 catch {
-    if ($certificateInstalled -and $thumbprint) {
+    foreach ($storeName in $installedStores) {
         try {
-            Invoke-CertUtil -Arguments @('-user', '-Silent', '-delstore', 'TrustedPeople', $thumbprint) -Action 'Removing the certificate from CurrentUser\TrustedPeople'
+            Invoke-CertUtil -Arguments @('-user', '-Silent', '-delstore', $storeName, $thumbprint) -Action "Removing the certificate from CurrentUser\$storeName"
         }
         catch {
             Write-Warning $_
