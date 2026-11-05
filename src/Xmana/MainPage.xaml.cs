@@ -26,6 +26,8 @@ namespace Xmana
         private Slider playerSeekSlider;
         private TextBlock playerTimeText;
         private Button playerPlayPauseButton;
+        private ComboBox playerQualitySelector;
+        private JToken activePlaybackFiles;
         private bool updatingSeek;
         private VideoItem playingItem;
         private DateTime lastProgressWriteUtc = DateTime.MinValue;
@@ -1174,7 +1176,7 @@ namespace Xmana
             try
             {
                 var files = await api.GetTranscodedFilesAsync(item.Id);
-                var uri = PlaybackService.FindStreamUrl(files);
+                var uri = PlaybackService.FindStreamUrl(files, state.PreferredQuality);
                 HideBusy();
                 if (uri == null)
                 {
@@ -1182,7 +1184,7 @@ namespace Xmana
                         "لم تُرجع الخدمة رابط بث قابل للتشغيل. لم يتم تسجيل رابط الوسائط أو حفظه."));
                     return;
                 }
-                ShowPlayer(item, uri, resumeSeconds);
+                ShowPlayer(item, files, uri, resumeSeconds);
             }
             catch (Exception ex)
             {
@@ -1191,13 +1193,15 @@ namespace Xmana
             }
         }
 
-        private void ShowPlayer(VideoItem item, Uri uri, double startPositionSeconds = 0)
+        private void ShowPlayer(VideoItem item, JToken files, Uri uri, double startPositionSeconds = 0)
         {
             ResetContent();
             playerTimer?.Stop();
             playback?.Dispose();
             playback = new PlaybackService();
             playingItem = item;
+            activePlaybackFiles = files;
+            playerQualitySelector = null;
             lastProgressWriteUtc = DateTime.MinValue;
 
             var stage = new Grid
@@ -1312,6 +1316,39 @@ namespace Xmana
             var transportPanel = new StackPanel { Spacing = 12 };
             transportPanel.Children.Add(timeline);
             transportPanel.Children.Add(controls);
+
+            var qualities = PlaybackService.FindAvailableQualities(files);
+            if (qualities.Count > 0)
+            {
+                playerQualitySelector = new ComboBox
+                {
+                    MinWidth = 220,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    FontSize = 18,
+                    Header = L("Playback quality", "جودة التشغيل")
+                };
+                playerQualitySelector.Items.Add(new ComboBoxItem
+                {
+                    Content = L("Auto", "تلقائي"),
+                    Tag = "Auto"
+                });
+                foreach (var quality in qualities)
+                    playerQualitySelector.Items.Add(new ComboBoxItem { Content = quality, Tag = quality });
+
+                var preferred = state.PreferredQuality;
+                var selected = playerQualitySelector.Items
+                    .OfType<ComboBoxItem>()
+                    .FirstOrDefault(option => String.Equals(option.Tag as string, preferred, StringComparison.OrdinalIgnoreCase));
+                playerQualitySelector.SelectedItem = selected ?? playerQualitySelector.Items[0];
+                playerQualitySelector.SelectionChanged += async (s, e) =>
+                {
+                    var option = playerQualitySelector.SelectedItem as ComboBoxItem;
+                    var quality = option?.Tag as string;
+                    if (!String.IsNullOrWhiteSpace(quality))
+                        await ChangePlaybackQualityAsync(quality);
+                };
+                transportPanel.Children.Add(playerQualitySelector);
+            }
             var bottomOverlay = new Border
             {
                 VerticalAlignment = VerticalAlignment.Bottom,
@@ -1336,6 +1373,26 @@ namespace Xmana
             playerTimer.Start();
             RefreshPlayerUi();
             close.Focus(FocusState.Programmatic);
+        }
+
+        private async Task ChangePlaybackQualityAsync(string quality)
+        {
+            if (playback == null || activePlaybackFiles == null) return;
+            var qualities = PlaybackService.FindAvailableQualities(activePlaybackFiles);
+            if (!String.Equals(quality, "Auto", StringComparison.OrdinalIgnoreCase) &&
+                !qualities.Contains(quality, StringComparer.OrdinalIgnoreCase))
+                return;
+
+            var position = playback.Position;
+            var uri = PlaybackService.FindStreamUrl(activePlaybackFiles, quality);
+            if (uri == null)
+            {
+                AddMessage(L("That quality is not available for this title.", "هذه الجودة غير متاحة لهذا العنوان."));
+                return;
+            }
+
+            state.PreferredQuality = quality;
+            playback.Play(uri, position > TimeSpan.Zero ? position : (TimeSpan?)null);
         }
 
         private void RefreshPlayerUi()
