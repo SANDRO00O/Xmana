@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Xmana.Models;
 
 namespace Xmana.Services
 {
@@ -148,17 +149,23 @@ namespace Xmana.Services
             });
 
         public Task<JToken> GetRecommendationsAsync(string videoId, string title) =>
-            PostJsonAsync(RecommendationUrl, new {
-                MovieId = videoId, MovieName = title, ReProcessIfExpired = true
+            PostJsonAsync(RecommendationUrl, new RecommendationRequest {
+                MovieId = videoId,
+                MovieName = title,
+                ReProcessIfExpired = true
             });
 
         public Task<JToken> GetRatingSummaryAsync(string videoId, string kind, string rootSeries)
         {
             var isEpisode = kind == "2";
-            var targetId = !String.IsNullOrWhiteSpace(rootSeries) && rootSeries != "0" ? rootSeries : videoId;
+            // This mapping is specific to the rating-summary service, as documented in API.md.
+            var targetId = (rootSeries ?? "0") != "0" ? rootSeries : videoId;
             var targetType = isEpisode ? "Episode" : "Movie";
-            return PostJsonAsync(RatingsUrl, new {
-                targets = new[] { new { targetId = targetId, targetType = targetType } }
+            return PostJsonAsync(RatingsUrl, new RatingSummaryRequest {
+                Targets = new[] { new RatingTarget {
+                    TargetId = targetId,
+                    TargetType = targetType
+                } }
             });
         }
 
