@@ -60,7 +60,7 @@ namespace Xmana.Models
             if (token == null || token.Type != JTokenType.Object) return null;
             var item = new VideoItem
             {
-                Id = Read(token, "nb"),
+                Id = Read(token, "nb", "id", "videoId"),
                 EnglishTitle = Read(token, "en_title"),
                 ArabicTitle = Read(token, "ar_title"),
                 OtherTitle = Read(token, "other_title"),
@@ -86,7 +86,7 @@ namespace Xmana.Models
                 IsSpecial = ReadBoolean(token, "isSpecial"),
                 HasIntroSkipping = ReadBoolean(token, "hasIntroSkipping"),
                 ShowComments = ReadBoolean(token, "showComments"),
-                IsSeries = Read(token, "kind") == "3" || Read(token, "kind") == "series",
+                IsSeries = false,
                 Language = VideoLanguage.FromToken(token["videoLanguages"])
             };
 
