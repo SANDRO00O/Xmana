@@ -419,9 +419,9 @@ namespace Xmana
             ResetContent();
             ShowBusy(L("Loading anime…", "جارٍ تحميل الأنمي…"));
             var animeMovies = await SafeListAsync(() =>
-                api.GetVideosByCategoryAsync("57", "desc", "1", 0, "0"));
+                api.GetVideosByCategoryAndLanguageAsync("57", "22", "1", "desc", "0", 0));
             var animeSeries = await SafeListAsync(() =>
-                api.GetVideosByCategoryAsync("57", "desc", "2", 0, "0"));
+                api.GetVideosByCategoryAndLanguageAsync("57", "22", "2", "desc", "0", 0));
             foreach (var series in animeSeries) series.IsSeries = true;
             var items = animeMovies.Concat(animeSeries).GroupBy(v => v.Id).Select(g => g.First()).ToList();
             HideBusy();
@@ -433,57 +433,162 @@ namespace Xmana
                 AddRail(L("Animation & anime", "الأنمي والرسوم المتحركة"), items);
         }
 
+        private async Task<JToken> SafeTokenAsync(Func<Task<JToken>> request)
+        {
+            try { return await request(); }
+            catch { return null; }
+        }
+
         private async Task ShowCategoriesAsync()
         {
             ResetContent();
             ShowBusy(L("Loading categories…", "جارٍ تحميل التصنيفات…"));
-            JToken response = null;
-            try { response = await api.GetMainCategoriesAsync(isArabic ? "ar" : "en"); } catch { }
+            var mainTask = SafeTokenAsync(() => api.GetMainCategoriesAsync(isArabic ? "ar" : "en"));
+            var subTask = SafeTokenAsync(() => api.GetSubCategoriesAsync(isArabic ? "ar" : "en"));
+            var frequencyTask = SafeTokenAsync(() => api.GetCategoryLanguageFrequencyAsync());
+            var data = await Task.WhenAll(mainTask, subTask, frequencyTask);
             HideBusy();
+
             PageContent.Children.Add(SectionTitle(L("Browse by category", "تصفح حسب التصنيف")));
-            var categories = CinemanaApiClient.AsList(response);
-            if (!categories.Any())
+            var categories = new List<CategoryChoice>();
+            AddCategoryChoices(categories, CinemanaApiClient.AsList(data[0]));
+            AddCategoryChoices(categories, CinemanaApiClient.AsList(data[1]));
+            categories = categories
+                .Where(x => !String.IsNullOrWhiteSpace(x.Id) && !String.IsNullOrWhiteSpace(x.Title))
+                .GroupBy(x => x.Id)
+                .Select(group => group.First())
+                .OrderBy(x => x.Title)
+                .ToList();
+
+            if (categories.Count == 0)
             {
                 AddMessage(L("Category data is unavailable right now.", "بيانات التصنيفات غير متاحة حالياً."));
                 return;
             }
 
-            var grid = new WrapGrid
+            var tiles = new WrapGrid
             {
                 ItemWidth = 310,
                 ItemHeight = 92,
                 Orientation = Orientation.Horizontal,
                 HorizontalAlignment = HorizontalAlignment.Stretch
             };
-            foreach (var entry in categories)
+            foreach (var category in categories)
             {
-                var id = ReadTokenString(entry, "nb", "id", "catNb", "categoryID", "category_id");
-                var title = ReadTokenString(entry, isArabic ? "ar_title" : "en_title", isArabic ? "en_title" : "ar_title", "title");
-                if (String.IsNullOrWhiteSpace(id) || String.IsNullOrWhiteSpace(title)) continue;
                 var button = new Button
                 {
-                    Content = title,
-                    Tag = new CategoryChoice { Id = id, Title = title },
+                    Content = category.Title,
+                    Tag = category,
                     Style = (Style)Application.Current.Resources["XmanaButton"],
                     HorizontalAlignment = HorizontalAlignment.Stretch,
                     Margin = new Thickness(6),
                     Height = 78
                 };
                 button.Click += async (s, e) =>
+                    await ShowCategoryAsync((CategoryChoice)((Button)s).Tag, data[2]);
+                tiles.Children.Add(button);
+            }
+            PageContent.Children.Add(tiles);
+        }
+
+        private void AddCategoryChoices(IList<CategoryChoice> target, IEnumerable<JToken> source)
+        {
+            foreach (var entry in source)
+            {
+                var id = ReadTokenString(entry, "nb", "id");
+                var title = ReadTokenString(entry, isArabic ? "ar_title" : "en_title",
+                    isArabic ? "en_title" : "ar_title");
+                if (!String.IsNullOrWhiteSpace(id) && !String.IsNullOrWhiteSpace(title))
+                    target.Add(new CategoryChoice { Id = id, Title = title });
+            }
+        }
+
+        private async Task ShowCategoryAsync(CategoryChoice category, JToken frequencyResponse)
+        {
+            ResetContent();
+            PageContent.Children.Add(SectionTitle(category.Title));
+
+            var frequencyEntry = CinemanaApiClient.AsList(frequencyResponse)
+                .FirstOrDefault(entry => ReadTokenString(entry, "nb") == category.Id);
+            var languages = frequencyEntry?["langArray"] as JArray;
+            ComboBox languageSelector = null;
+            if (languages != null && languages.Count > 0)
+            {
+                var filterPanel = new StackPanel
                 {
-                    var choice = (CategoryChoice)((Button)s).Tag;
-                    await ShowCategoryAsync(choice);
+                    Orientation = Orientation.Horizontal,
+                    Spacing = 14,
+                    Margin = new Thickness(0, 0, 0, 10)
                 };
-                grid.Children.Add(button);
+                languageSelector = new ComboBox
+                {
+                    MinWidth = 320,
+                    FontSize = 19,
+                    PlaceholderText = L("All languages", "كل اللغات")
+                };
+                languageSelector.Items.Add(new ComboBoxItem
+                {
+                    Content = L("All languages", "كل اللغات"),
+                    Tag = String.Empty,
+                    IsSelected = true
+                });
+                foreach (var language in languages)
+                {
+                    var languageId = ReadTokenString(language, "langNb");
+                    var languageTitle = ReadTokenString(language,
+                        isArabic ? "lang_ar_title" : "lang_en_title",
+                        isArabic ? "lang_en_title" : "lang_ar_title");
+                    if (String.IsNullOrWhiteSpace(languageId) || String.IsNullOrWhiteSpace(languageTitle)) continue;
+                    languageSelector.Items.Add(new ComboBoxItem { Content = languageTitle, Tag = languageId });
+                }
+                var apply = new Button
+                {
+                    Content = L("Apply language", "تطبيق اللغة"),
+                    Style = (Style)Application.Current.Resources["XmanaButton"]
+                };
+                apply.Click += async (s, e) =>
+                {
+                    var selected = languageSelector.SelectedItem as ComboBoxItem;
+                    await LoadCategoryContentsAsync(category, selected?.Tag as string);
+                };
+                filterPanel.Children.Add(languageSelector);
+                filterPanel.Children.Add(apply);
+                PageContent.Children.Add(filterPanel);
             }
 
-            if (grid.Children.Count == 0)
-            {
-                AddMessage(L("No category entries could be read from the response.", "تعذر قراءة عناصر التصنيف من الاستجابة."));
-                return;
-            }
-            PageContent.Children.Add(grid);
+            await LoadCategoryContentsAsync(category, null);
         }
+
+        private async Task LoadCategoryContentsAsync(CategoryChoice category, string languageId)
+        {
+            ShowBusy(L("Loading category…", "جارٍ تحميل التصنيف…"));
+            var movieTask = SafeListAsync(() => String.IsNullOrWhiteSpace(languageId)
+                ? api.GetVideosByCategoryAsync(category.Id, "desc", "1", 0, "0")
+                : api.GetVideosByCategoryAndLanguageAsync(category.Id, languageId, "1", "desc", "0", 0));
+            var seriesTask = SafeListAsync(() => String.IsNullOrWhiteSpace(languageId)
+                ? api.GetVideosByCategoryAsync(category.Id, "desc", "2", 0, "0")
+                : api.GetVideosByCategoryAndLanguageAsync(category.Id, languageId, "2", "desc", "0", 0));
+            var data = await Task.WhenAll(movieTask, seriesTask);
+            var movies = data[0];
+            var series = data[1];
+            foreach (var item in series) item.IsSeries = true;
+            HideBusy();
+
+            // Preserve the heading and language filter; remove only the previous result rails.
+            while (PageContent.Children.Count > 2) PageContent.Children.RemoveAt(PageContent.Children.Count - 1);
+            AddRail(L("Movies", "الأفلام"), movies);
+            AddRail(L("Series", "المسلسلات"), series);
+            if (movies.Count == 0 && series.Count == 0)
+                AddMessage(L("No titles were returned for this category and language.",
+                    "لم تُرجع هذه الفئة واللغة عناوين."));
+        }
+
+        private sealed class CategoryChoice
+        {
+            public string Id { get; set; }
+            public string Title { get; set; }
+        }
+
 
         private static string ReadTokenString(JToken token, params string[] names)
         {
