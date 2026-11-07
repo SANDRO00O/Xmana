@@ -1,33 +1,59 @@
 # Xmana Playback Notes
 
+The player is a first-class Xmana subsystem, not a thin wrapper around default controls.
+
 ## Media source
 
-Use GET /transcoddedFiles/id/{id} to discover available media qualities dynamically. Never assume every title exposes the same quality set.
+Use `GET /transcoddedFiles/id/{id}` to discover available media qualities dynamically.
 
-The signed media URL property names were not included in the public API reference. The current implementation searches likely URL/file fields as a bootstrap fallback; this is not a verified stable response schema.
+Never assume that every video exposes the same qualities.
 
-## Required player states
+## Required states
 
-- loading and buffering
-- playing and paused
-- seeking and ended
-- network failure and invalid media
-- retry and quality fallback
+The player must handle:
+
+- loading
+- buffering
+- playing
+- paused
+- seeking
+- ended
+- network failure
+- invalid media
+- retry
+- quality fallback
 - subtitle availability
 - app suspend/resume
 
 ## Local progress
 
-Persist playback position periodically, not for every media-position event. The target record should include video ID, series ID, season, episode, position, duration, last-played time and completion state.
+Persist playback progress periodically, not on every media-position event.
+
+Store at least:
+
+```text
+videoId
+seriesId
+season
+episode
+position
+duration
+lastPlayed
+completed
+```
 
 ## Resume
 
-Offer Resume and Start Over only after a meaningful local position has been recorded.
+Offer `Resume` and `Start Over` when a meaningful local position exists.
 
-## Subtitles and intro skip
+## Subtitles
 
-Use only subtitle tracks and skip timings actually returned by the public API. Do not invent timings or assume a unit that has not been verified.
+Use only subtitle tracks actually returned by the public API.
+
+## Intro skip
+
+Use skip timing data only when the backend provides it. Do not invent timings or assume a time unit that has not been verified.
 
 ## Security
 
-Never log, persist or expose temporary signed stream URLs.
+Never log, persist, or expose temporary signed stream URLs.

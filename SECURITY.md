@@ -13,8 +13,8 @@ This repository documents a public/read-oriented API surface. It intentionally e
 
 ## If you discover a credential or private data
 
-Do not open a public issue containing the secret. Remove it from repository history where appropriate and report the exposure privately through the repository owner's preferred private contact channel.
+Do not open a public issue containing the secret. Remove it from the repository history where appropriate and report the exposure privately through the repository owner's preferred private contact channel.
 
 ## Scope
 
-This project is not affiliated with Shabakaty or Cinemana. It implements only the public/read-oriented catalog surface and does not provide access to private user data or private account functionality.
+The documentation project itself is not affiliated with Shabakaty or Cinemana and does not provide access to private user data or private account functionality.

@@ -1,10 +1,43 @@
-**/bin/
-**/obj/
-.vs/
+# Build outputs
+bin/
+obj/
 artifacts/
+packages/
+AppPackages/
+BundleArtifacts/
+
+# IDE / editor
+.vs/
+.vscode/
+.idea/
 *.user
 *.suo
+
+# Test / coverage
+TestResults/
+coverage/
+coverage-report/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local secrets / environment
+.env
+.env.*
 *.pfx
-*.p12
 *.key
-*.cer
+*.pem
+
+# Generated local caches
+.cache/
+local-cache/
+
+# Temporary research outputs
+*.log
+tmp/
+temp/
+
+# Never commit exported signed media URLs or local captures
+captures/
+responses-local/

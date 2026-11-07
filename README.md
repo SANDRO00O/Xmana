@@ -1,42 +1,135 @@
 # Xmana
 
-[![Build Xmana for Xbox Dev Mode](https://github.com/SANDRO00O/Xmana/actions/workflows/build-xbox.yml/badge.svg)](https://github.com/SANDRO00O/Xmana/actions/workflows/build-xbox.yml)
+**Xmana — Movies, Series & Anime**
 
-Xmana is a cinematic, controller-first media catalogue and playback client built with native UWP, XAML and C# for Xbox Developer Mode.
+A native Xbox streaming application designed for:
 
-## Interface direction
+- Xbox One
+- Xbox One S
+- Xbox One X
+- Xbox Series S
+- Xbox Series X
 
-This is a television UI, not a phone layout stretched to 16:9. Navigation lives in a horizontal top tab bar. The home screen uses a landscape feature panel and horizontal poster rails with generous focus targets, ten-foot typography, D-pad navigation and no side drawer.
+Xmana is designed as a premium, controller-first streaming experience with a cinematic dark interface, a custom playback UI, local-only personalization, and a clean architecture built around the documented public Cinemana/Shabakaty API.
 
-## Project
+> **Unofficial project:** Xmana is not affiliated with, endorsed by, or sponsored by Cinemana, Shabakaty, Microsoft, or Netflix.
 
-- Xmana.sln — Visual Studio solution.
-- src/Xmana — UWP x64 app.
-- API.md — observed public Cinemana API reference used by the client.
-- docs/implementation-status.md — implemented features and remaining work.
-- docs/ — architecture, API verification, playback and Xbox deployment notes.
-- .github/workflows/build-xbox.yml — x64 package build and development signing.
+## Repository Guide
 
-## Build
+- [PROMPT.md](PROMPT.md) — complete product and engineering specification for building Xmana.
+- [API.md](API.md) — observed public API reference used by the application.
+- [SECURITY.md](SECURITY.md) — security and responsible-use guidance.
+- [docs/](docs/) — architecture, playback, Xbox deployment, troubleshooting, API verification, and research methodology.
+  - [docs/architecture.md](docs/architecture.md) — application architecture boundaries.
+  - [docs/playback.md](docs/playback.md) — player behavior and local progress rules.
+  - [docs/xbox-deployment.md](docs/xbox-deployment.md) — Xbox build/deployment validation notes.
+  - [docs/troubleshooting.md](docs/troubleshooting.md) — known API/player/UI failure modes.
+  - [docs/api-verification-matrix.md](docs/api-verification-matrix.md) — verified/uncertain/empty status for the API surface.
+  - [docs/research-methodology.md](docs/research-methodology.md) — how the API was discovered and validated.
+- `src/` — application source code.
+- `tools/` — asset generator and repository validator.
+- `assets/` — branding and application assets.
 
-Use Visual Studio with the Universal Windows Platform workload and Windows 10 SDK 19041 or later. Run tools/Generate-Assets.ps1 once to create the manifest images, then open Xmana.sln, choose Release | x64, and build the package.
+## Product Goals
 
-GitHub Actions runs the Windows build, creates a short-lived self-signed code-signing certificate, signs the generated MSIX using SHA-256, verifies the signature, and publishes the MSIX with its matching public .cer certificate. No private key is stored in the repository.
+Xmana should provide:
 
-## Install on Xbox Developer Mode
+- Movies, series, and anime discovery.
+- Search and advanced search.
+- Categories, languages, groups, latest and featured content.
+- Rich movie and series details.
+- Seasons and episode navigation.
+- A custom Xbox-friendly video player.
+- Subtitle and quality selection when available.
+- Resume playback, local history, favorites, and watchlist.
+- Local metadata and image caching.
+- Smooth controller-first navigation.
+- Robust handling of empty responses, network failures, and playback errors.
 
-Download the MSIX and Xmana-Dev-Certificate.cer from the same workflow artifact. In Xbox Device Portal, open Apps → Deploy apps, upload the package and select the matching certificate. Follow docs/xbox-deployment.md.
 
-The certificate is for development/testing only. It is regenerated on each build, so keep each certificate with the package created in that workflow run.
+## Languages
 
-## API scope and limitations
+Xmana provides full first-class support for **Arabic and English**, including:
 
-The client follows the public/read-oriented API paths and request shapes documented in API.md. Account login, subscriptions, notifications, personal history and other account-changing operations are intentionally excluded. Unknown response fields and signed media URL formats are not assumed; playback currently uses best-effort URL discovery until a stable live response shape can be verified.
+- Complete UI localization
+- Arabic RTL and English LTR layouts
+- Arabic/English search input
+- Localized player controls and messages
+- Localized settings, dialogs, errors, and accessibility labels
+- Language preference persisted locally
 
-## Status
+Both languages must provide the same functional coverage. Arabic is not treated as a partial translation of the English interface.
 
-This is an initial implementation milestone, not a feature-complete media product. The API client, TV shell, catalogue views, local library features, season navigation and MediaPlayerElement playback path are present. Real Xbox hardware testing, subtitle selection/rendering, playback recovery, caching, deeper collection browsing and full RTL review remain outstanding. See docs/implementation-status.md.
+## Data and Authentication Model
 
-## License
+Xmana does **not** implement user login or account synchronization.
 
-See LICENSE.
+User-specific state is local to the Xbox installation. The project intentionally excludes authentication, account APIs, tokens, credentials, private user data, and authenticated state synchronization.
+
+## API
+
+Primary API base:
+
+```text
+https://cinemana.shabakaty.cc/api/android/
+```
+
+`API.md` is the source of truth for the documented public API behavior. It records verified request bodies, endpoint paths, parameters, response shapes, pagination rules, sorting behavior, live backend quirks, and known uncertainties.
+
+`docs/api-verification-matrix.md` and `docs/research-methodology.md` exist so an implementation agent does not ask the user to repeat already-completed API research.
+
+Do not assume undocumented behavior. Do not hard-code temporary signed media URLs or credentials.
+
+## Development
+
+Read these files before implementation:
+
+1. `PROMPT.md`
+2. `API.md`
+3. `SECURITY.md`
+
+Build Xmana incrementally according to the milestones defined in `PROMPT.md`.
+
+The implementation should use a current Microsoft-supported native Xbox application stack and should verify platform-specific APIs against current Microsoft documentation rather than assuming that desktop-only Windows APIs are available on Xbox.
+
+## Repository Structure
+
+```text
+Xmana/
+├── PROMPT.md
+├── API.md
+├── README.md
+├── SECURITY.md
+├── LICENSE
+├── src/
+├── tests/
+├── assets/
+└── docs/
+```
+
+## Licensing
+
+The repository's documentation and original example material are provided under the [MIT License](LICENSE), unless a file states otherwise.
+
+Third-party service APIs, trademarks, media, artwork, and other third-party material remain the property of their respective owners.
+
+
+## Building
+
+Requirements: Windows 10/11, Visual Studio 2022 with the *Universal Windows Platform development* workload
+(Windows SDK 10.0.19041 or newer). Open `src/Xmana.sln`, choose `x64`, and build.
+
+CI: `.github/workflows/build.yml` validates localization parity (Linux) and builds the UWP project
+(`windows-latest`, `Release|x64`). Xbox deployment steps are in [docs/xbox-deployment.md](docs/xbox-deployment.md).
+
+## Source layout
+
+```text
+src/Xmana.Core   netstandard2.0: localization, settings abstractions, logging (no UI dependencies)
+src/Xmana.App    UWP app: shell, navigation, focus, theme, pages
+tools/           asset generator and repository validator
+```
+
+Status: the build is milestone based. Milestone 1 (project, branding, theme, shell navigation, focus,
+splash, Arabic/English with RTL) is implemented. Nothing in this repository has been verified on
+physical Xbox hardware yet.

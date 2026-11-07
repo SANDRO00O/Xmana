@@ -1,46 +1,74 @@
 # Xmana API Verification Matrix
 
-**Verification date recorded by the source research:** 2026-09-30  
+This matrix is a compact implementation-oriented companion to `API.md`.
+
+**Live verification date:** 2026-09-30  
 **Scope:** public/read-oriented API behavior only.
 
-| Area | Endpoint | Observed behavior | Caveat |
-|---|---|---|---|
-| Video metadata | GET allVideoInfo/id/{id} | Rich video metadata object | Fields can vary |
-| Related videos | GET relatedVideos/id/{id}/kind/{kind}/level/{level} | List of related video objects | Not every kind value was exhaustively defined |
-| Parental status | GET checkVideoParentalLevel/id/{id} | Status object | Numeric meaning not independently decoded |
-| Video files | GET transcoddedFiles/id/{id} | Quality entries including 240p through 1080p | Signed media URLs are intentionally omitted |
-| Translations | GET translationFiles/id/{id} | Arabic/English/Spanish fields and paths | Actual subtitle download paths may vary |
-| Skip durations | GET skippingDurations/id/{id} | start/end arrays | Tested response was empty; units not established |
-| Thumbnails | GET video_thumbnails/video_id/{id} | Thumbnail metadata wrapper | Tested response was empty with status 204 |
-| Comments | GET videoComment/id/{id}/limit/{limit}/offset/{offset} | Public comments list | Tested response was empty; populated schema unknown |
-| Seasons | GET videoSeasonNumber/id/{id} | Season entries | Four entries observed in one series test |
-| Episodes | GET videoSeason/id/{id} | Episode list | 86 episodes observed in one series test |
-| Simple search | GET video/V/2/.../video_title_search/... | Base64URL-without-padding query | Search route has two itemsPerPage segments |
-| Advanced search | GET AdvancedSearch?level={level}&{filters} | Title/type/year/category filters | staffTitle and sort are unreliable |
-| Banner | GET banner/level/{level} | Direct list | 44 items in tested level=0 response |
-| Groups | GET videoGroups/lang/{lang}/level/{level} | groups wrapper | 11 groups observed in test |
-| Newest videos | GET newlyVideosItems/.../offset/{offset}/ | Count-like offset behavior | Not a conventional skip offset |
-| Latest videos | GET latestVideosItems/.../offset/{offset}/ | Count-like offset behavior | Not a conventional skip offset |
-| Latest movies/series | GET latestMovies and latestSeries | Paginated 24-item pages | Use the exact path shapes in API.md |
-| Featured movies | GET featuredMovies/... | 12 items in test | Frontend page fixed at 0 |
-| Popular films | GET popularFilms/kind/{period}/... | Endpoint exists | M/W/D combinations tested returned empty lists |
-| Categories | GET mainCategories and subCategories | Category lists | Language parameter affects titles |
-| Category/language | GET videosByCategoryAndLanguage | Combined category/language/movie-series filtering | videoKind 1=movies, 2=series on tested listing endpoints |
-| Generic listing | GET video/V/2/... | Page-size/pagination and sort | title_asc/title_desc were not reliable |
-| Group paging | GET videoListPagination/groupID/... | Page-based list | 12 items then 2 items in tested group |
-| Collections | GET collectionsId and collectionVideos | Endpoints reachable | Tested calls returned empty lists |
-| Staff | GET staff/actorID/{staffId}/lang/{lang}/level/{level} | Staff profile and associated works | Language affects localized values |
-| FAQ | GET faqQuestion | Reachable FAQ endpoint | Full schema not exhaustively documented |
-| Recommendations | POST recommendation service | Exact body uses MovieId, MovieName, ReProcessIfExpired | Optional service |
-| Rating summary | POST rating-summary-by-targets-types | targets array with targetId/targetType | Empty items are valid |
-| Bulk lookup | POST /getVideosByIds | Form-urlencoded ids field discovered in frontend | Response schema not live-verified |
-| Season posters | POST thumbnail seasonposters | RootSeries request observed | Returned HTTP 503 during research |
+| Area | Endpoint | Verification | Key observed result | Implementation status |
+|---|---|---|---|---|
+| Video metadata | `GET /allVideoInfo/id/{id}` | Live | Rich video object; known fields documented in `API.md` | Verified |
+| Related videos | `GET /relatedVideos/id/{id}/kind/{kind}/level/{level}` | Live | Direct list; 11 items for tested `1119122/kind=1/level=0` | Verified |
+| Parental status | `GET /checkVideoParentalLevel/id/{id}` | Live | `{status:"1"}` for `1119122`; semantic meaning unknown | Verified response / uncertain meaning |
+| Video files | `GET /transcoddedFiles/id/{id}` | Live | 240p/360p/480p/720p/1080p observed; signed URLs omitted | Verified |
+| Translation files | `GET /translationFiles/id/{id}` | Live | Arabic/English/Spanish fields plus paths | Verified |
+| Skip durations | `GET /skippingDurations/id/{id}` | Live | `{start:[],end:[]}` | Verified response / unit unknown |
+| Thumbnails | `GET /video_thumbnails/video_id/{id}` | Live | `{videoThumbnails:[],status:204}` | Verified |
+| Comments | `GET /videoComment/id/{id}/limit/{limit}/offset/{offset}` | Live | Empty list for tested `1119122` | Verified empty result / populated schema unknown |
+| Seasons | `GET /videoSeasonNumber/id/{id}` | Live | Four seasons for `1119119` | Verified |
+| Episodes | `GET /videoSeason/id/{id}` | Live | 86 episodes for `1119119` | Verified |
+| Simple search | `GET /video/V/2/.../video_title_search/...` | Live + JS | Base64URL-no-padding keyword; `Conan` → `Q29uYW4` | Verified |
+| Advanced title search | `GET /AdvancedSearch?...videoTitle=...` | Live | `Conan` returned Conan/Detective Conan results | Verified |
+| Advanced type | `AdvancedSearch type=` | Live | `movies` and `series` work | Verified |
+| Advanced year | `AdvancedSearch year=` | Live | Inclusive ranges observed | Verified |
+| Advanced category | `AdvancedSearch category_id=` | Live | Comma-separated IDs behave OR-like | Verified |
+| Advanced staff | `AdvancedSearch staffTitle=` | Live | Filter exists but exact-name behavior unreliable | Uncertain |
+| Advanced sort | `AdvancedSearch sort=` | Live | Not reliably distinct | Unreliable |
+| Banner | `GET /banner/level/{level}` | Live | 44 items at level 0 | Verified |
+| Video groups | `GET /videoGroups/lang/{lang}/level/{level}` | Live + JS | `{groups:[...]}`, 11 groups in test | Verified |
+| Newly videos | `GET /newlyVideosItems/.../offset/{offset}/` | Live | Offset behaves as count/limit with cap | Verified unusual semantics |
+| Latest videos | `GET /latestVideosItems/.../offset/{offset}/` | Live | Offset behaves as count | Verified unusual semantics |
+| Latest movies | `GET /latestMovies/.../page/{page}/` | Live | 24 items per frontend request | Verified |
+| Latest series | `GET /latestSeries/.../page/{page}/` | Live | 24 items per frontend request | Verified |
+| Featured movies | `GET /featuredMovies/.../page/0` | Live | 12 items | Verified |
+| Popular films | `GET /popularFilms/...` | Live | M/W/D page tests returned empty lists | Verified endpoint / currently empty |
+| Main categories | `GET /mainCategories?lang=` | Live | Category list including IDs documented in `API.md` | Verified |
+| Sub categories | `GET /subCategories?lang=` | Live | Subcategory list including IDs documented in `API.md` | Verified |
+| Category-language metadata | `GET /categoryLangFreqVideo` | Live | `langArray` with frequencies and language IDs | Verified |
+| Category videos | `GET /videosByCategory` | Live | `info` envelope; sort family works | Verified |
+| Category + language | `GET /videosByCategoryAndLanguage` | Live | `info` envelope; Japanese animation test worked | Verified |
+| Generic listings | `GET /video/V/2/...` | Live | ItemsPerPage 12/30/60 honored | Verified |
+| Generic sorting | `sortParam=` | Live | stars/r/asc/desc work; title sorting unreliable | Partially verified |
+| Group pagination | `GET /videoListPagination/...` | Live | Group 404 page0=12, page1=2 | Verified |
+| Collections list | `GET /collectionsId/` | Live | `[]` | Verified empty |
+| Collection videos | `GET /collectionVideos/...` | Live | Tested IDs returned empty | Verified empty in tests |
+| Staff | `GET /staff/actorID/...` | Live | Staff + associated works; Minami Takayama example | Verified |
+| FAQ | `GET /faqQuestion` | Live | Reachable and returned FAQ data | Verified reachability / schema incomplete |
+| Recommendations | `POST /api/recommendation/recommend` | Live | Body `{MovieId,MovieName,ReProcessIfExpired:true}` → HTTP 200 | Verified |
+| Rating summary | `POST /api/targets/rating-summary-by-targets-types` | Live | Target body confirmed; HTTP 200 | Verified |
+| Rating check | `POST /api/ratings/check-rating` | Live | HTTP 405; backend allowed DELETE/GET/OPTIONS | Do not depend on |
+| Bulk video lookup | `POST /getVideosByIds` | JS extraction | Form-urlencoded body with `ids`; response schema not captured | Discovered / not live-schema-verified |
+| Season posters | `POST /api/series/seasonposters` | Live | `{RootSeries:<id>}` pattern; HTTP 503 | Optional/unavailable |
 
-## Implementation rules
+## Core test fixtures
 
-- Do not infer semantics from undocumented numeric flags.
-- Treat empty lists and 204-style results as legitimate API outcomes.
-- Do not assume sorting or offset semantics are shared between endpoints.
-- Do not depend on bulk lookup or season-poster services until their response contracts are verified.
-- Do not hard-code or persist signed media URLs.
-- Keep login, account settings, subscriptions, notifications, history and account-changing requests outside the public-only runtime.
+```text
+Series:                   1119119
+Episode:                  1119122
+Detective Conan metadata: 192319
+Staff (Minami Takayama):  2766
+Animation category:       57
+Crime category:           60
+Action category:          84
+Japanese language:        22
+Group:                    404
+```
+
+## Confidence rules
+
+- **Verified** means the exact endpoint behavior was observed live.
+- **Verified response / uncertain meaning** means the response is known but a semantic interpretation is not.
+- **Unreliable** means the route exists but tests did not establish stable semantics.
+- **Currently empty** means the endpoint worked but returned no records at the time of testing.
+
+Do not turn an uncertain item into an assumed specification.

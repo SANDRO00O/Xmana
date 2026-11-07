@@ -1,0 +1,217 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Strict monochrome cinematic palette -->
+    <Color x:Key="XmanaBackgroundColor">#FF0A0A0B</Color>
+    <Color x:Key="XmanaSurfaceColor">#FF1A1A1D</Color>
+    <Color x:Key="XmanaSurfaceHighColor">#FF2A2A2E</Color>
+    <Color x:Key="XmanaTextPrimaryColor">#FFF5F5F5</Color>
+    <Color x:Key="XmanaTextSecondaryColor">#FFA3A3A9</Color>
+    <Color x:Key="XmanaAccentColor">#FFD9D9DC</Color>
+    <Color x:Key="XmanaFocusColor">#FFFFFFFF</Color>
+
+    <SolidColorBrush x:Key="XmanaBackgroundBrush" Color="{StaticResource XmanaBackgroundColor}" />
+    <SolidColorBrush x:Key="XmanaSurfaceBrush" Color="{StaticResource XmanaSurfaceColor}" />
+    <SolidColorBrush x:Key="XmanaSurfaceHighBrush" Color="{StaticResource XmanaSurfaceHighColor}" />
+    <SolidColorBrush x:Key="XmanaTextPrimaryBrush" Color="{StaticResource XmanaTextPrimaryColor}" />
+    <SolidColorBrush x:Key="XmanaTextSecondaryBrush" Color="{StaticResource XmanaTextSecondaryColor}" />
+    <SolidColorBrush x:Key="XmanaAccentBrush" Color="{StaticResource XmanaAccentColor}" />
+    <SolidColorBrush x:Key="XmanaFocusBrush" Color="{StaticResource XmanaFocusColor}" />
+    <SolidColorBrush x:Key="XmanaOnAccentBrush" Color="#FF0A0A0B" />
+
+    <!-- Arabic + Latin: Segoe UI ships both scripts (shaping, ligatures, diacritics) on Xbox. -->
+    <FontFamily x:Key="XmanaFont">Segoe UI</FontFamily>
+    <!-- Wordmark typeface (Inter Bold, SIL OFL) bundled with the app. -->
+    <FontFamily x:Key="XmanaWordmarkFont">/Assets/Fonts/Inter-Bold.otf#Inter</FontFamily>
+
+    <!-- Type scale (effective pixels; Xbox renders at 2x of 960x540) -->
+    <x:Double x:Key="XmanaFontSizeBody">20</x:Double>
+    <x:Double x:Key="XmanaFontSizeSmall">16</x:Double>
+    <x:Double x:Key="XmanaFontSizeTitle">36</x:Double>
+
+    <!-- Logo system: Full / Compact / Icon share one typeface -->
+    <Style x:Key="WordmarkFullStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource XmanaWordmarkFont}" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="FontSize" Value="96" />
+        <Setter Property="Foreground" Value="{StaticResource XmanaTextPrimaryBrush}" />
+        <Setter Property="IsTextScaleFactorEnabled" Value="False" />
+    </Style>
+    <Style x:Key="WordmarkCompactStyle" TargetType="TextBlock" BasedOn="{StaticResource WordmarkFullStyle}">
+        <Setter Property="FontSize" Value="30" />
+    </Style>
+    <Style x:Key="WordmarkIconStyle" TargetType="TextBlock" BasedOn="{StaticResource WordmarkFullStyle}">
+        <Setter Property="FontSize" Value="44" />
+    </Style>
+
+    <Style x:Key="PageTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource XmanaFont}" />
+        <Setter Property="FontSize" Value="{StaticResource XmanaFontSizeTitle}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{StaticResource XmanaTextPrimaryBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style x:Key="SectionHeadingStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource XmanaFont}" />
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{StaticResource XmanaTextPrimaryBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style x:Key="BodyTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource XmanaFont}" />
+        <Setter Property="FontSize" Value="{StaticResource XmanaFontSizeBody}" />
+        <Setter Property="Foreground" Value="{StaticResource XmanaTextSecondaryBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="LineHeight" Value="28" />
+    </Style>
+    <Style x:Key="HintTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource XmanaFont}" />
+        <Setter Property="FontSize" Value="{StaticResource XmanaFontSizeSmall}" />
+        <Setter Property="Foreground" Value="{StaticResource XmanaTextSecondaryBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Top navigation tab (RadioButton so the active section is visible) -->
+    <Style x:Key="NavTabButtonStyle" TargetType="RadioButton">
+        <Setter Property="Foreground" Value="{StaticResource XmanaTextSecondaryBrush}" />
+        <Setter Property="FontFamily" Value="{StaticResource XmanaFont}" />
+        <Setter Property="FontSize" Value="{StaticResource XmanaFontSizeBody}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="UseSystemFocusVisuals" Value="False" />
+        <Setter Property="MinHeight" Value="44" />
+        <Setter Property="Margin" Value="2,0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Grid x:Name="Root" Background="Transparent">
+                        <Border x:Name="FocusBorder" BorderThickness="3" BorderBrush="Transparent" CornerRadius="10" />
+                        <StackPanel Margin="16,6,16,4" VerticalAlignment="Center">
+                            <ContentPresenter x:Name="Presenter"
+                                              Content="{TemplateBinding Content}"
+                                              Foreground="{TemplateBinding Foreground}"
+                                              HorizontalAlignment="Center" />
+                            <Border x:Name="Underline" Height="3" CornerRadius="2" Margin="0,4,0,0"
+                                    Background="{StaticResource XmanaTextPrimaryBrush}" Opacity="0" />
+                        </StackPanel>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Presenter.Foreground" Value="{StaticResource XmanaTextPrimaryBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Presenter.Foreground" Value="{StaticResource XmanaTextPrimaryBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled" />
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="CheckStates">
+                                <VisualState x:Name="Unchecked" />
+                                <VisualState x:Name="Indeterminate" />
+                                <VisualState x:Name="Checked">
+                                    <VisualState.Setters>
+                                        <Setter Target="Underline.Opacity" Value="1" />
+                                        <Setter Target="Presenter.Foreground" Value="{StaticResource XmanaTextPrimaryBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="FocusStates">
+                                <VisualState x:Name="Focused">
+                                    <VisualState.Setters>
+                                        <Setter Target="FocusBorder.BorderBrush" Value="{StaticResource XmanaFocusBrush}" />
+                                        <Setter Target="Root.Background" Value="{StaticResource XmanaSurfaceBrush}" />
+                                        <Setter Target="Presenter.Foreground" Value="{StaticResource XmanaTextPrimaryBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Unfocused" />
+                                <VisualState x:Name="PointerFocused" />
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Choice pill (language selector etc.): filled when checked, bold white ring when focused -->
+    <Style x:Key="ChoiceButtonStyle" TargetType="RadioButton">
+        <Setter Property="Foreground" Value="{StaticResource XmanaTextPrimaryBrush}" />
+        <Setter Property="FontFamily" Value="{StaticResource XmanaFont}" />
+        <Setter Property="FontSize" Value="{StaticResource XmanaFontSizeBody}" />
+        <Setter Property="UseSystemFocusVisuals" Value="False" />
+        <Setter Property="MinHeight" Value="56" />
+        <Setter Property="MinWidth" Value="180" />
+        <Setter Property="Margin" Value="0,0,12,0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Grid x:Name="Root">
+                        <Border x:Name="Bg" Background="{StaticResource XmanaSurfaceBrush}"
+                                BorderThickness="3" BorderBrush="Transparent" CornerRadius="12" />
+                        <ContentPresenter x:Name="Presenter"
+                                          Content="{TemplateBinding Content}"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          Margin="28,12"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Bg.Background" Value="{StaticResource XmanaSurfaceHighBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Bg.Background" Value="{StaticResource XmanaSurfaceHighBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled" />
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="CheckStates">
+                                <VisualState x:Name="Unchecked" />
+                                <VisualState x:Name="Indeterminate" />
+                                <VisualState x:Name="Checked">
+                                    <VisualState.Setters>
+                                        <Setter Target="Bg.Background" Value="{StaticResource XmanaAccentBrush}" />
+                                        <Setter Target="Presenter.Foreground" Value="{StaticResource XmanaOnAccentBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="FocusStates">
+                                <VisualState x:Name="Focused">
+                                    <VisualState.Setters>
+                                        <Setter Target="Bg.BorderBrush" Value="{StaticResource XmanaFocusBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Unfocused" />
+                                <VisualState x:Name="PointerFocused" />
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Controller hint badge ("A", "B", "LB / RB") -->
+    <Style x:Key="HintBadgeStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource XmanaSurfaceHighBrush}" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="Padding" Value="9,2" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="HintBadgeTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource XmanaFont}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Foreground" Value="{StaticResource XmanaTextPrimaryBrush}" />
+        <!-- Button names are labels, not translated text; keep them left-to-right in RTL layouts. -->
+        <Setter Property="FlowDirection" Value="LeftToRight" />
+    </Style>
+</ResourceDictionary>
