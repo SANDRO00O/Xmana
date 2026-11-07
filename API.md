@@ -632,6 +632,18 @@ Observed live group examples at that time included:
 
 These titles are **live content examples, not permanent API constants**.
 
+### Featured Series (observed live behavior)
+
+There is **no** dedicated `/featuredSeries` endpoint. Featured Series is delivered as a normal **video group**:
+
+- the group with `groupsID` = `2` in the `videoGroups` response (observed title `Featured Series`, `hasPagination` = `1`, 12 items in `content`);
+- more content comes from the documented group pagination endpoint, `GET /videoListPagination/groupID/2/level/{level}/itemsPerPage/12/page/{page}`;
+- `collectionVideos/collectionID/2` was tested separately and returned an empty result, so it is **not** the source.
+
+By contrast, Featured Movies has its own dedicated endpoint (`/featuredMovies/...`).
+
+Group ID `2` is **observed live behavior, not an official permanent backend constant**. Clients must therefore treat the rail as optional: if no group with `groupsID` = `2` is present, or its `content` is empty, no Featured Series rail is shown.
+
 ---
 
 ## `GET /newlyVideosItems/level/{level}/offset/{offset}/`

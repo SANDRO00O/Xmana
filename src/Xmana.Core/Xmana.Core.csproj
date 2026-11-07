@@ -1,13 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Platform-neutral core: no UWP/XAML types allowed here so it stays unit-testable off-device. -->
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>10.0</LangVersion>
+    <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
     <RootNamespace>Xmana.Core</RootNamespace>
     <AssemblyName>Xmana.Core</AssemblyName>
-    <Version>0.1.0</Version>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Tolerant JToken parsing only (no reflection-based binding): safe with .NET Native on UWP. -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
 
 </Project>

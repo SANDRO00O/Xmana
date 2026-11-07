@@ -1,43 +1,32 @@
-# Build outputs
-bin/
-obj/
-artifacts/
-packages/
-AppPackages/
-BundleArtifacts/
+# Python
+__pycache__/
+*.py[cod]
 
-# IDE / editor
-.vs/
-.vscode/
-.idea/
-*.user
-*.suo
-
-# Test / coverage
-TestResults/
-coverage/
-coverage-report/
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Local secrets / environment
+# Local environments and secrets
 .env
 .env.*
-*.pfx
-*.key
-*.pem
+*.local
 
-# Generated local caches
-.cache/
-local-cache/
+# OS/editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
 
-# Temporary research outputs
-*.log
-tmp/
-temp/
-
-# Never commit exported signed media URLs or local captures
+# Local captures / scratch data
 captures/
-responses-local/
+responses/
+*.log
+
+# .NET / Visual Studio / UWP
+bin/
+obj/
+.vs/
+*.user
+*.suo
+AppPackages/
+BundleArtifacts/
+*.pfx
+*.snk
+TestResults/
+node_modules/

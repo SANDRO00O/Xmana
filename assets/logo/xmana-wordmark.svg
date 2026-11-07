@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <rect width="1920" height="1080" fill="#000000"/>
+  <g transform="translate(672 476.23) scale(1.82)">
+    <polygon points="0,0 9.48,0 54,70 44.52,70" fill="#EBEBEB"/>
+    <polygon points="44.52,0 54,0 9.48,70 0,70" fill="#EBEBEB"/>
+    <path d="M67,20 L67,70 M67,44 C67,32.95 73.96,24 82.54,24 C91.12,24 98.08,32.95 98.08,44 L98.08,70 M98.08,44 C98.08,32.95 105.04,24 113.62,24 C122.2,24 129.16,32.95 129.16,44 L129.16,70" fill="none" stroke="#EBEBEB" stroke-width="8" stroke-linecap="butt" stroke-linejoin="miter"/>
+    <path d="M190.16,45 A21,21 0 1 1 148.16,45 A21,21 0 1 1 190.16,45 M190.16,20 L190.16,70" fill="none" stroke="#EBEBEB" stroke-width="8" stroke-linecap="butt" stroke-linejoin="miter"/>
+    <path d="M209.16,20 L209.16,70 M209.16,44 C209.16,32.95 218.56,24 230.16,24 C241.76,24 251.16,32.95 251.16,44 L251.16,70" fill="none" stroke="#EBEBEB" stroke-width="8" stroke-linecap="butt" stroke-linejoin="miter"/>
+    <path d="M312.16,45 A21,21 0 1 1 270.16,45 A21,21 0 1 1 312.16,45 M312.16,20 L312.16,70" fill="none" stroke="#EBEBEB" stroke-width="8" stroke-linecap="butt" stroke-linejoin="miter"/>
+  </g>
+</svg>

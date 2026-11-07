@@ -5,15 +5,19 @@
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   IgnorableNamespaces="uap mp">
 
+  <!--
+    Identity.Name / Publisher are development placeholders. Replace them (Project > Publish >
+    Associate App with the Store) before creating a Store/Creators-Program package.
+  -->
   <Identity
     Name="Xmana.Unofficial"
     Publisher="CN=Xmana"
-    Version="0.1.0.0" />
+    Version="1.0.0.0" />
 
-  <mp:PhoneIdentity PhoneProductId="6e1b7a3c-4f0d-4b0e-9a54-7c1a5b2d9e10" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
+  <mp:PhoneIdentity PhoneProductId="5b8f3c1e-7a42-4d6b-9c05-1f2e8a7d4b90" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
 
   <Properties>
-    <DisplayName>Xmana</DisplayName>
+    <DisplayName>ms-resource:AppDisplayName</DisplayName>
     <PublisherDisplayName>Xmana</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -30,22 +34,21 @@
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="Xmana.App.App">
       <uap:VisualElements
-        DisplayName="Xmana"
+        DisplayName="ms-resource:AppDisplayName"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png"
-        Description="Xmana — Movies, Series &amp; Anime (unofficial client)"
+        Description="ms-resource:AppDescription"
         BackgroundColor="#000000">
-        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square310x310Logo="Assets\LargeTile.png" ShortName="Xmana">
-          <uap:ShowNameOnTiles>
-            <uap:ShowOn Tile="square150x150Logo" />
-            <uap:ShowOn Tile="wide310x150Logo" />
-          </uap:ShowNameOnTiles>
-        </uap:DefaultTile>
+        <uap:DefaultTile
+          Wide310x150Logo="Assets\Wide310x150Logo.png"
+          Square71x71Logo="Assets\Square71x71Logo.png"
+          Square310x310Logo="Assets\Square310x310Logo.png" />
         <uap:SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="#000000" />
       </uap:VisualElements>
     </Application>
   </Applications>
 
+  <!-- Outbound HTTPS to the public Cinemana API only; no other capability is requested. -->
   <Capabilities>
     <Capability Name="internetClient" />
   </Capabilities>

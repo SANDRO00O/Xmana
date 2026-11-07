@@ -1,0 +1,57 @@
+<Page
+    x:Class="Xmana.App.Pages.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Xmana.App.Controls">
+
+    <Page.Resources>
+        <Storyboard x:Name="ShimmerStoryboard" RepeatBehavior="Forever" AutoReverse="True">
+            <DoubleAnimation Storyboard.TargetName="Skeleton"
+                             Storyboard.TargetProperty="Opacity"
+                             From="0.45" To="1" Duration="0:0:1.1" />
+        </Storyboard>
+    </Page.Resources>
+
+    <Grid>
+        <!-- Content: hero + rails -->
+        <ScrollViewer x:Name="Scroller"
+                      IsTabStop="False"
+                      VerticalScrollMode="Auto"
+                      VerticalScrollBarVisibility="Hidden"
+                      HorizontalScrollMode="Disabled"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Visibility="Collapsed">
+            <StackPanel Spacing="12">
+                <TextBlock x:Name="OfflineNotice"
+                           Style="{ThemeResource XmanaCaptionTextStyle}"
+                           Visibility="Collapsed" />
+                <controls:HeroView x:Name="Hero" Visibility="Collapsed" />
+                <StackPanel x:Name="Rails" Spacing="6" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Loading skeleton (no text, no fake content) -->
+        <StackPanel x:Name="Skeleton" Spacing="16">
+            <Border Height="300" CornerRadius="6" Background="{ThemeResource XmanaSurfaceBrush}" />
+            <Border Width="180" Height="22" CornerRadius="4" HorizontalAlignment="Left" Background="{ThemeResource XmanaSurfaceBrush}" />
+            <StackPanel Orientation="Horizontal" Spacing="14">
+                <Border Width="152" Height="228" CornerRadius="6" Background="{ThemeResource XmanaSurfaceBrush}" />
+                <Border Width="152" Height="228" CornerRadius="6" Background="{ThemeResource XmanaSurfaceBrush}" />
+                <Border Width="152" Height="228" CornerRadius="6" Background="{ThemeResource XmanaSurfaceBrush}" />
+                <Border Width="152" Height="228" CornerRadius="6" Background="{ThemeResource XmanaSurfaceBrush}" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Empty / error message with Retry -->
+        <StackPanel x:Name="MessagePanel"
+                    Visibility="Collapsed"
+                    MaxWidth="460"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Spacing="12">
+            <TextBlock x:Name="MessageTitle" Style="{ThemeResource XmanaDisplayTextStyle}" FontSize="30" />
+            <TextBlock x:Name="MessageBody" Style="{ThemeResource XmanaSecondaryTextStyle}" />
+            <controls:ChoiceButton x:Name="RetryButton" Width="200" Margin="0,8,0,0" Click="OnRetryClick" />
+        </StackPanel>
+    </Grid>
+</Page>

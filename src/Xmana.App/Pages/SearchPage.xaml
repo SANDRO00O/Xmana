@@ -1,0 +1,43 @@
+<Page
+    x:Class="Xmana.App.Pages.SearchPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Xmana.App.Controls">
+
+    <Grid RowSpacing="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="TitleText"
+                   Grid.Row="0"
+                   Style="{ThemeResource XmanaDisplayTextStyle}"
+                   FontSize="30" />
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8">
+            <TextBox x:Name="QueryBox"
+                     Width="330"
+                     InputScope="Search"
+                     AcceptsReturn="False"
+                     TextChanged="OnTextChanged"
+                     KeyDown="OnQueryKeyDown" />
+            <controls:ChoiceButton x:Name="ClearButton" Width="104" Visibility="Collapsed" Click="OnClearClick" />
+            <controls:ChoiceButton x:Name="AdvancedButton" Width="170" Click="OnAdvancedClick" />
+        </StackPanel>
+
+        <StackPanel x:Name="IdleHost" Grid.Row="2" Spacing="8" Margin="0,16,0,0" HorizontalAlignment="Left" MaxWidth="460">
+            <StackPanel x:Name="RecentPanel" Spacing="6" Visibility="Collapsed">
+                <TextBlock x:Name="RecentHeader" Style="{ThemeResource XmanaTitleTextStyle}" FontSize="20" />
+                <StackPanel x:Name="RecentList" Spacing="4" />
+                <controls:ChoiceButton x:Name="ClearRecentButton" Width="220" HorizontalAlignment="Left" Click="OnClearRecentClick" />
+            </StackPanel>
+            <TextBlock x:Name="IdleHint"
+                       Style="{ThemeResource XmanaSecondaryTextStyle}"
+                       Margin="0,8,0,0" />
+        </StackPanel>
+
+        <controls:ResultsView x:Name="Results" Grid.Row="2" />
+    </Grid>
+</Page>

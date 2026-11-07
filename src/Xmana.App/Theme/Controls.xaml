@@ -1,0 +1,351 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Xmana.App.Controls">
+
+    <!--
+        ChoiceButton: one TV-friendly list/choice control used by the navigation rail and Settings.
+          Focus  (gamepad/keyboard) -> solid near-white plate with dark content: unmistakable at couch distance.
+          Active (current section / selected option) -> accent bar on the start edge + full-opacity content.
+        The two states live in separate visual-state groups and never animate the same property to
+        different values, so focused+active combines cleanly. The bar sits on the start edge and mirrors in RTL.
+    -->
+    <Style x:Key="ChoiceButtonStyle" TargetType="controls:ChoiceButton">
+        <Setter Property="Height" Value="40" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="IsTabStop" Value="True" />
+        <Setter Property="UseSystemFocusVisuals" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="controls:ChoiceButton">
+                    <Grid x:Name="Root" Background="Transparent" CornerRadius="6">
+                        <Border x:Name="FocusPlate"
+                                Background="{ThemeResource XmanaFocusFillBrush}"
+                                CornerRadius="6"
+                                Opacity="0" />
+                        <Border x:Name="ActiveBar"
+                                Width="3"
+                                Height="20"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Background="{ThemeResource XmanaAccentBrush}"
+                                CornerRadius="1.5"
+                                Opacity="0" />
+                        <StackPanel x:Name="Content"
+                                    Orientation="Horizontal"
+                                    Spacing="12"
+                                    Margin="16,0,12,0"
+                                    VerticalAlignment="Center"
+                                    Opacity="0.72">
+                            <FontIcon x:Name="Icon"
+                                      FontFamily="Segoe MDL2 Assets"
+                                      FontSize="18"
+                                      Glyph="{TemplateBinding Glyph}"
+                                      Foreground="{ThemeResource XmanaTextPrimaryBrush}"
+                                      VerticalAlignment="Center" />
+                            <TextBlock x:Name="LabelText"
+                                       Text="{TemplateBinding Label}"
+                                       Style="{ThemeResource XmanaBodyTextStyle}"
+                                       TextWrapping="NoWrap"
+                                       TextTrimming="CharacterEllipsis"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="FocusStates">
+                                <VisualState x:Name="Unfocused" />
+                                <VisualState x:Name="PointerFocused" />
+                                <VisualState x:Name="Focused">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="FocusPlate"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.08" />
+                                        <DoubleAnimation Storyboard.TargetName="Content"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.08" />
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LabelText"
+                                                                       Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0"
+                                                                    Value="{ThemeResource XmanaOnFocusBrush}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Icon"
+                                                                       Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0"
+                                                                    Value="{ThemeResource XmanaOnFocusBrush}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="ActivationStates">
+                                <VisualState x:Name="Inactive" />
+                                <VisualState x:Name="Active">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="ActiveBar"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.08" />
+                                        <DoubleAnimation Storyboard.TargetName="Content"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.08" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+        NavTabButtonStyle: top horizontal navigation tabs (replaces the old left sidebar).
+          Focus (gamepad/keyboard) -> solid near-white plate, same language as every other focusable control.
+          Active (current section)  -> bottom underline, monochrome only (no color).
+        Auto-width per tab (not Stretch): tabs sit side by side, sized to their label, never reserving a fixed column.
+    -->
+    <Style x:Key="NavTabButtonStyle" TargetType="controls:ChoiceButton">
+        <Setter Property="Height" Value="40" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="IsTabStop" Value="True" />
+        <Setter Property="UseSystemFocusVisuals" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="controls:ChoiceButton">
+                    <Grid x:Name="Root" Background="Transparent" CornerRadius="6" Margin="2,0">
+                        <Border x:Name="FocusPlate"
+                                Background="{ThemeResource XmanaFocusFillBrush}"
+                                CornerRadius="6"
+                                Opacity="0" />
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="8"
+                                    Margin="18,0,18,0"
+                                    VerticalAlignment="Center"
+                                    Opacity="0.72">
+                            <FontIcon x:Name="Icon"
+                                      FontFamily="Segoe MDL2 Assets"
+                                      FontSize="16"
+                                      Glyph="{TemplateBinding Glyph}"
+                                      Foreground="{ThemeResource XmanaTextPrimaryBrush}"
+                                      VerticalAlignment="Center" />
+                            <TextBlock x:Name="LabelText"
+                                       Text="{TemplateBinding Label}"
+                                       Style="{ThemeResource XmanaBodyTextStyle}"
+                                       TextWrapping="NoWrap"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Border x:Name="ActiveBar"
+                                Height="3"
+                                VerticalAlignment="Bottom"
+                                HorizontalAlignment="Stretch"
+                                Margin="18,0,18,0"
+                                Background="{ThemeResource XmanaAccentBrush}"
+                                CornerRadius="1.5"
+                                Opacity="0" />
+
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="FocusStates">
+                                <VisualState x:Name="Unfocused" />
+                                <VisualState x:Name="PointerFocused" />
+                                <VisualState x:Name="Focused">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="FocusPlate"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.08" />
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LabelText"
+                                                                       Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0"
+                                                                    Value="{ThemeResource XmanaOnFocusBrush}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Icon"
+                                                                       Storyboard.TargetProperty="Foreground">
+                                            <DiscreteObjectKeyFrame KeyTime="0"
+                                                                    Value="{ThemeResource XmanaOnFocusBrush}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="ActivationStates">
+                                <VisualState x:Name="Inactive" />
+                                <VisualState x:Name="Active">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="ActiveBar"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.08" />
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LabelText"
+                                                                       Storyboard.TargetProperty="FontWeight">
+                                            <DiscreteObjectKeyFrame KeyTime="0">
+                                                <DiscreteObjectKeyFrame.Value>
+                                                    <FontWeight>SemiBold</FontWeight>
+                                                </DiscreteObjectKeyFrame.Value>
+                                            </DiscreteObjectKeyFrame>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+        VideoCard: 2:3 poster with title and year/rating underneath.
+          Focus -> 3 px near-white ring + 6% scale-up (very visible at couch distance).
+        The ring is drawn inside the poster bounds so neighbours are never overlapped by it.
+    -->
+    <Style x:Key="VideoCardStyle" TargetType="controls:VideoCard">
+        <Setter Property="Width" Value="152" />
+        <Setter Property="Margin" Value="0,0,14,0" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="IsTabStop" Value="True" />
+        <Setter Property="UseSystemFocusVisuals" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="controls:VideoCard">
+                    <Grid x:Name="Root" Background="Transparent" RenderTransformOrigin="0.5,0.5">
+                        <Grid.RenderTransform>
+                            <CompositeTransform x:Name="Scale" />
+                        </Grid.RenderTransform>
+                        <StackPanel Spacing="8">
+                            <Grid Width="152" Height="228">
+                                <Border Background="{ThemeResource XmanaSurfaceRaisedBrush}" CornerRadius="6" />
+                                <FontIcon x:Name="PlaceholderGlyph"
+                                          FontFamily="Segoe MDL2 Assets"
+                                          Glyph="&#xE714;"
+                                          FontSize="34"
+                                          Opacity="0.28"
+                                          Foreground="{ThemeResource XmanaTextPrimaryBrush}"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
+                                <Border CornerRadius="6">
+                                    <Border.Background>
+                                        <ImageBrush x:Name="PosterBrush" Stretch="UniformToFill" />
+                                    </Border.Background>
+                                </Border>
+                                <Border x:Name="ProgressTrack"
+                                        Height="4"
+                                        VerticalAlignment="Bottom"
+                                        Background="#99000000"
+                                        CornerRadius="0,0,6,6"
+                                        Visibility="Collapsed">
+                                    <Border x:Name="ProgressFill"
+                                            HorizontalAlignment="Left"
+                                            Background="{ThemeResource XmanaAccentBrush}" />
+                                </Border>
+                                <Border x:Name="FocusRing"
+                                        BorderBrush="{ThemeResource XmanaFocusFillBrush}"
+                                        BorderThickness="3"
+                                        CornerRadius="6"
+                                        Opacity="0" />
+                            </Grid>
+                            <TextBlock x:Name="TitleText"
+                                       Style="{ThemeResource XmanaBodyTextStyle}"
+                                       FontSize="16"
+                                       MaxLines="2"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock x:Name="CaptionText"
+                                       Style="{ThemeResource XmanaCaptionTextStyle}"
+                                       MaxLines="1"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="FocusStates">
+                                <VisualState x:Name="Unfocused" />
+                                <VisualState x:Name="PointerFocused" />
+                                <VisualState x:Name="Focused">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="FocusRing"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.08" />
+                                        <DoubleAnimation Storyboard.TargetName="Scale"
+                                                         Storyboard.TargetProperty="ScaleX"
+                                                         To="1.06" Duration="0:0:0.1" />
+                                        <DoubleAnimation Storyboard.TargetName="Scale"
+                                                         Storyboard.TargetProperty="ScaleY"
+                                                         To="1.06" Duration="0:0:0.1" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- StaffCard: round photo, name and role; focus shows a near-white ring and a slight scale-up. -->
+    <Style x:Key="StaffCardStyle" TargetType="controls:StaffCard">
+        <Setter Property="Width" Value="112" />
+        <Setter Property="Margin" Value="0,0,12,0" />
+        <Setter Property="IsTabStop" Value="True" />
+        <Setter Property="UseSystemFocusVisuals" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="controls:StaffCard">
+                    <Grid x:Name="Root" Background="Transparent" RenderTransformOrigin="0.5,0.5">
+                        <Grid.RenderTransform>
+                            <CompositeTransform x:Name="Scale" />
+                        </Grid.RenderTransform>
+                        <StackPanel Spacing="6" HorizontalAlignment="Center">
+                            <Grid Width="88" Height="88" HorizontalAlignment="Center">
+                                <Ellipse Fill="{ThemeResource XmanaSurfaceRaisedBrush}" />
+                                <FontIcon x:Name="PlaceholderGlyph"
+                                          FontFamily="Segoe MDL2 Assets"
+                                          Glyph="&#xE77B;"
+                                          FontSize="30"
+                                          Opacity="0.3"
+                                          Foreground="{ThemeResource XmanaTextPrimaryBrush}"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
+                                <Ellipse>
+                                    <Ellipse.Fill>
+                                        <ImageBrush x:Name="PhotoBrush" Stretch="UniformToFill" />
+                                    </Ellipse.Fill>
+                                </Ellipse>
+                                <Ellipse x:Name="FocusRing"
+                                         Stroke="{ThemeResource XmanaFocusFillBrush}"
+                                         StrokeThickness="3"
+                                         Opacity="0" />
+                            </Grid>
+                            <TextBlock x:Name="NameText"
+                                       Style="{ThemeResource XmanaBodyTextStyle}"
+                                       FontSize="15"
+                                       TextAlignment="Center"
+                                       MaxLines="2"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock x:Name="RoleText"
+                                       Style="{ThemeResource XmanaCaptionTextStyle}"
+                                       TextAlignment="Center"
+                                       MaxLines="1"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="FocusStates">
+                                <VisualState x:Name="Unfocused" />
+                                <VisualState x:Name="PointerFocused" />
+                                <VisualState x:Name="Focused">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="FocusRing"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.08" />
+                                        <DoubleAnimation Storyboard.TargetName="Scale"
+                                                         Storyboard.TargetProperty="ScaleX"
+                                                         To="1.06" Duration="0:0:0.1" />
+                                        <DoubleAnimation Storyboard.TargetName="Scale"
+                                                         Storyboard.TargetProperty="ScaleY"
+                                                         To="1.06" Duration="0:0:0.1" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

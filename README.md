@@ -20,14 +20,8 @@ Xmana is designed as a premium, controller-first streaming experience with a cin
 - [API.md](API.md) — observed public API reference used by the application.
 - [SECURITY.md](SECURITY.md) — security and responsible-use guidance.
 - [docs/](docs/) — architecture, playback, Xbox deployment, troubleshooting, API verification, and research methodology.
-  - [docs/architecture.md](docs/architecture.md) — application architecture boundaries.
-  - [docs/playback.md](docs/playback.md) — player behavior and local progress rules.
-  - [docs/xbox-deployment.md](docs/xbox-deployment.md) — Xbox build/deployment validation notes.
-  - [docs/troubleshooting.md](docs/troubleshooting.md) — known API/player/UI failure modes.
-  - [docs/api-verification-matrix.md](docs/api-verification-matrix.md) — verified/uncertain/empty status for the API surface.
-  - [docs/research-methodology.md](docs/research-methodology.md) — how the API was discovered and validated.
 - `src/` — application source code.
-- `tools/` — asset generator and repository validator.
+- `tests/` — automated tests.
 - `assets/` — branding and application assets.
 
 ## Product Goals
@@ -74,9 +68,7 @@ Primary API base:
 https://cinemana.shabakaty.cc/api/android/
 ```
 
-`API.md` is the source of truth for the documented public API behavior. It records verified request bodies, endpoint paths, parameters, response shapes, pagination rules, sorting behavior, live backend quirks, and known uncertainties.
-
-`docs/api-verification-matrix.md` and `docs/research-methodology.md` exist so an implementation agent does not ask the user to repeat already-completed API research.
+`API.md` is the source of truth for the documented public API behavior. It records observed endpoint paths, parameters, response shapes, pagination rules, sorting behavior, and known uncertainties.
 
 Do not assume undocumented behavior. Do not hard-code temporary signed media URLs or credentials.
 
@@ -92,6 +84,30 @@ Build Xmana incrementally according to the milestones defined in `PROMPT.md`.
 
 The implementation should use a current Microsoft-supported native Xbox application stack and should verify platform-specific APIs against current Microsoft documentation rather than assuming that desktop-only Windows APIs are available on Xbox.
 
+## Status
+
+| Milestone | State |
+|---|---|
+| 1. Project setup, branding, theme, navigation, focus, splash | Done: built in GitHub Actions |
+| 2. Networking, API client, models, cache | Implemented; **not yet compiled/tested** (CI will build and run tests) |
+| 3. Home (hero, rails, images, states) | Done: built in GitHub Actions |
+| 4. Movies, Series, Anime, Categories, Search, Advanced Search | Done: built in GitHub Actions |
+| 5. Details, series, seasons, episodes, cast, recommendations | Done: built in GitHub Actions |
+| 6. Player, resume, subtitles, quality, next episode | Done: built in GitHub Actions (Skip Intro is dormant until its unit is verified) |
+| 7. History, Favorites, Watchlist, Continue Watching, search history, Settings, FAQ | Done: built in GitHub Actions |
+| 8. Performance (image memory budget, download concurrency, cache housekeeping) | Done: built in GitHub Actions. Full grid virtualization and weak-hardware testing need a physical Xbox and are deferred (see docs/architecture.md) |
+| 9. Polish: modal focus trapping, Player Error actions | Done: built in GitHub Actions |
+| UI/UX redesign pass: top nav bar, monochrome palette, in-place episode switching | Done: built in GitHub Actions |
+| 10. Tests, packaging, deployment documentation, final cleanup, production configuration (v1.0.0.0) | Implemented; awaiting CI build/test |
+
+### Build and test
+
+- App: open `Xmana.sln` in Visual Studio 2022 (UWP workload) on Windows, build `Xmana.App` for x64, deploy to a Dev Mode Xbox. See [docs/xbox-deployment.md](docs/xbox-deployment.md).
+- Core tests: `dotnet test tests/Xmana.Tests/Xmana.Tests.csproj`.
+- CI: `.github/workflows/build.yml` runs static checks and tests on Ubuntu, then builds an unsigned x64 package on Windows (Debug and Release) and uploads it as an artifact.
+- Static checks (no toolchain needed): `python3 tools/validate.py`.
+- Regenerate logo assets: `python3 assets/logo/generate_logo.py` (needs Node + `sharp`).
+
 ## Repository Structure
 
 ```text
@@ -104,7 +120,8 @@ Xmana/
 ├── src/
 ├── tests/
 ├── assets/
-└── docs/
+├── docs/
+└── tools/
 ```
 
 ## Licensing
@@ -112,24 +129,3 @@ Xmana/
 The repository's documentation and original example material are provided under the [MIT License](LICENSE), unless a file states otherwise.
 
 Third-party service APIs, trademarks, media, artwork, and other third-party material remain the property of their respective owners.
-
-
-## Building
-
-Requirements: Windows 10/11, Visual Studio 2022 with the *Universal Windows Platform development* workload
-(Windows SDK 10.0.19041 or newer). Open `src/Xmana.sln`, choose `x64`, and build.
-
-CI: `.github/workflows/build.yml` validates localization parity (Linux) and builds the UWP project
-(`windows-latest`, `Release|x64`). Xbox deployment steps are in [docs/xbox-deployment.md](docs/xbox-deployment.md).
-
-## Source layout
-
-```text
-src/Xmana.Core   netstandard2.0: localization, settings abstractions, logging (no UI dependencies)
-src/Xmana.App    UWP app: shell, navigation, focus, theme, pages
-tools/           asset generator and repository validator
-```
-
-Status: the build is milestone based. Milestone 1 (project, branding, theme, shell navigation, focus,
-splash, Arabic/English with RTL) is implemented. Nothing in this repository has been verified on
-physical Xbox hardware yet.

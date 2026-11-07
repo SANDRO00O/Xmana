@@ -1,12 +1,11 @@
 using System;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.System.Profile;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
 using Xmana.App.Services;
-using Xmana.App.Views;
-using Xmana.Core.Diagnostics;
+using Xmana.App.Shell;
 
 namespace Xmana.App
 {
@@ -16,52 +15,69 @@ namespace Xmana.App
         {
             InitializeComponent();
 
-            // Xbox defaults to a mouse cursor; controller-first apps request pointer mode only when needed.
+            // Enables XY (D-pad / stick) focus navigation instead of the Xbox "mouse mode" cursor.
+            // Must be set before the first window content is created.
             RequiresPointerMode = ApplicationRequiresPointerMode.WhenRequested;
 
             Suspending += OnSuspending;
-            UnhandledException += OnUnhandledException;
         }
 
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
-            if (e.PrelaunchActivated) return;
-
-            var root = Window.Current.Content as Frame;
-            if (root == null)
+            if (!(Window.Current.Content is ShellPage))
             {
                 AppServices.Initialize();
-
-                // Draw edge to edge; layouts keep their own TV safe-area margins.
-                ApplicationView.GetForCurrentView().SetDesiredBoundsMode(ApplicationViewBoundsMode.UseCoreWindow);
-
-                root = new Frame();
-                Window.Current.Content = root;
-                AppServices.ApplyLanguageToWindow(root);
-                root.Navigate(typeof(SplashPage));
+                ConfigureTelevisionDisplay();
+                Window.Current.Content = new ShellPage();
+                RunStartupHousekeeping();
             }
 
             Window.Current.Activate();
         }
 
+        /// <summary>
+        /// Prunes cache files that are old enough that nothing would still trust them anyway (PROMPT.md section 51 Caching). Runs once per
+        /// launch, off the UI thread, and never blocks startup: a failure here is invisible to the user.
+        /// </summary>
+        private static async void RunStartupHousekeeping()
+        {
+            try
+            {
+                var now = DateTime.UtcNow;
+                await AppServices.ApiCache.PurgeOlderThanAsync(TimeSpan.FromDays(31), now);
+                await AppServices.ImageDiskCache.PurgeOlderThanAsync(TimeSpan.FromDays(31), now);
+            }
+            catch (Exception)
+            {
+                // best-effort housekeeping only
+            }
+        }
+
+        private static void ConfigureTelevisionDisplay()
+        {
+            // On Xbox, draw to the screen edges and apply the TV safe area ourselves
+            // (XmanaSafeAreaThickness = 48/27 effective px) instead of the system's automatic inset,
+            // so later full-bleed artwork can extend behind the safe area.
+            if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
+            {
+                ApplicationView.GetForCurrentView().SetDesiredBoundsMode(ApplicationViewBoundsMode.UseCoreWindow);
+            }
+        }
+
         private void OnSuspending(object sender, SuspendingEventArgs e)
         {
+            // Milestone 1 has no state that must survive suspension. Later milestones flush local
+            // progress/cache here (PROMPT.md section 61).
             var deferral = e.SuspendingOperation.GetDeferral();
             try
             {
-                Log.Info("Lifecycle", "Suspending");
+                // Save where the viewer was before the system may terminate the app.
+                AppServices.ActivePlayback?.Flush();
             }
             finally
             {
                 deferral.Complete();
             }
-        }
-
-        private void OnUnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
-        {
-            // Never show stack traces to the user; log the type only (URLs/tokens are redacted by Log).
-            Log.Error("Unhandled", e.Message ?? "Unhandled exception", e.Exception);
-            e.Handled = true;
         }
     }
 }

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="320" viewBox="0 0 960 320">
+  <rect width="960" height="320" fill="#000000"/>
+  <g transform="translate(192 93.46) scale(1.9)">
+    <polygon points="0,0 12.23,0 54,70 41.77,70" fill="#EBEBEB"/>
+    <polygon points="41.77,0 54,0 12.23,70 0,70" fill="#EBEBEB"/>
+    <path d="M65.25,20 L65.25,70 M65.25,44 C65.25,33.64 71.79,25.25 79.86,25.25 C87.94,25.25 94.48,33.64 94.48,44 L94.48,70 M94.48,44 C94.48,33.64 101.02,25.25 109.09,25.25 C117.17,25.25 123.71,33.64 123.71,44 L123.71,70" fill="none" stroke="#EBEBEB" stroke-width="10.5" stroke-linecap="butt" stroke-linejoin="miter"/>
+    <path d="M181.71,45 A19.75,19.75 0 1 1 142.21,45 A19.75,19.75 0 1 1 181.71,45 M181.71,20 L181.71,70" fill="none" stroke="#EBEBEB" stroke-width="10.5" stroke-linecap="butt" stroke-linejoin="miter"/>
+    <path d="M200.21,20 L200.21,70 M200.21,44 C200.21,33.64 209.05,25.25 219.96,25.25 C230.87,25.25 239.71,33.64 239.71,44 L239.71,70" fill="none" stroke="#EBEBEB" stroke-width="10.5" stroke-linecap="butt" stroke-linejoin="miter"/>
+    <path d="M297.71,45 A19.75,19.75 0 1 1 258.21,45 A19.75,19.75 0 1 1 297.71,45 M297.71,20 L297.71,70" fill="none" stroke="#EBEBEB" stroke-width="10.5" stroke-linecap="butt" stroke-linejoin="miter"/>
+  </g>
+</svg>

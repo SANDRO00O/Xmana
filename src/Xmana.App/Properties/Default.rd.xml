@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Runtime directives for .NET Native (Release builds).
+    Xmana reads JSON through Newtonsoft.Json token APIs (JToken/JObject), not reflection-based model binding,
+    but Newtonsoft still inspects types at runtime, so it is kept fully reflectable.
+-->
 <Directives xmlns="http://schemas.microsoft.com/netfx/2013/01/metadata">
   <Application>
     <Assembly Name="*Application*" Dynamic="Required All" />
+    <Assembly Name="Newtonsoft.Json" Dynamic="Required All" />
+    <Assembly Name="Xmana.Core" Dynamic="Required All" />
   </Application>
 </Directives>

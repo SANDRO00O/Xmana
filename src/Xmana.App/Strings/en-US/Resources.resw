@@ -1,0 +1,751 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppDisplayName" xml:space="preserve">
+    <value>Xmana</value>
+    <comment>Package display name (brand, not translated).</comment>
+  </data>
+  <data name="AppDescription" xml:space="preserve">
+    <value>Xmana - Movies, Series &amp; Anime</value>
+    <comment>Package description shown by the system.</comment>
+  </data>
+  <data name="Nav_RailAccessibleName" xml:space="preserve">
+    <value>Main navigation</value>
+    <comment>Accessible name of the navigation rail.</comment>
+  </data>
+  <data name="Nav_Home" xml:space="preserve">
+    <value>Home</value>
+    <comment>Navigation: home</comment>
+  </data>
+  <data name="Nav_Movies" xml:space="preserve">
+    <value>Movies</value>
+    <comment>Navigation: movies</comment>
+  </data>
+  <data name="Nav_Series" xml:space="preserve">
+    <value>Series</value>
+    <comment>Navigation: TV series</comment>
+  </data>
+  <data name="Nav_Anime" xml:space="preserve">
+    <value>Anime</value>
+    <comment>Navigation: anime</comment>
+  </data>
+  <data name="Nav_Categories" xml:space="preserve">
+    <value>Categories</value>
+    <comment>Navigation: categories</comment>
+  </data>
+  <data name="Nav_Search" xml:space="preserve">
+    <value>Search</value>
+    <comment>Navigation: search</comment>
+  </data>
+  <data name="Nav_Favorites" xml:space="preserve">
+    <value>Favorites</value>
+    <comment>Navigation: favorites</comment>
+  </data>
+  <data name="Nav_Watchlist" xml:space="preserve">
+    <value>Watchlist</value>
+    <comment>Navigation: watchlist</comment>
+  </data>
+  <data name="Nav_History" xml:space="preserve">
+    <value>History</value>
+    <comment>Navigation: watch history</comment>
+  </data>
+  <data name="Nav_Settings" xml:space="preserve">
+    <value>Settings</value>
+    <comment>Navigation: settings</comment>
+  </data>
+  <data name="Placeholder_ComingSoon" xml:space="preserve">
+    <value>This section is coming soon.</value>
+    <comment>Shown on sections not built yet.</comment>
+  </data>
+  <data name="Settings_InterfaceHeader" xml:space="preserve">
+    <value>Interface</value>
+    <comment>Settings group title</comment>
+  </data>
+  <data name="Settings_Language" xml:space="preserve">
+    <value>Language</value>
+    <comment>Settings: interface language label</comment>
+  </data>
+  <data name="Settings_UnofficialNotice" xml:space="preserve">
+    <value>Xmana is an unofficial client and is not affiliated with or endorsed by Cinemana, Shabakaty, Microsoft, or Netflix.</value>
+    <comment>Unofficial-client notice</comment>
+  </data>
+  <data name="Nav_Details" xml:space="preserve">
+    <value>Details</value>
+    <comment>Title of the details screen.</comment>
+  </data>
+  <data name="Home_Section_FeaturedMovies" xml:space="preserve">
+    <value>Featured Movies</value>
+    <comment>Home rail title</comment>
+  </data>
+  <data name="Home_Section_LatestMovies" xml:space="preserve">
+    <value>Latest Movies</value>
+    <comment>Home rail title</comment>
+  </data>
+  <data name="Home_Section_LatestSeries" xml:space="preserve">
+    <value>Latest Series</value>
+    <comment>Home rail title</comment>
+  </data>
+  <data name="Home_Section_NewlyAdded" xml:space="preserve">
+    <value>Newly Added</value>
+    <comment>Home rail title</comment>
+  </data>
+  <data name="Home_Section_Popular" xml:space="preserve">
+    <value>Popular</value>
+    <comment>Home rail title</comment>
+  </data>
+  <data name="Home_Details" xml:space="preserve">
+    <value>Details</value>
+    <comment>Hero button</comment>
+  </data>
+  <data name="Home_PreviousBanner" xml:space="preserve">
+    <value>Previous featured title</value>
+    <comment>Hero previous button (accessible name)</comment>
+  </data>
+  <data name="Home_NextBanner" xml:space="preserve">
+    <value>Next featured title</value>
+    <comment>Hero next button (accessible name)</comment>
+  </data>
+  <data name="Home_EmptyTitle" xml:space="preserve">
+    <value>Nothing to show yet</value>
+    <comment>Home empty state title</comment>
+  </data>
+  <data name="Home_EmptyBody" xml:space="preserve">
+    <value>No titles are available right now. Try again in a little while.</value>
+    <comment>Home empty state body</comment>
+  </data>
+  <data name="Home_ErrorTitle" xml:space="preserve">
+    <value>Couldn't load content</value>
+    <comment>Home error state title</comment>
+  </data>
+  <data name="Home_ErrorBody" xml:space="preserve">
+    <value>Check your internet connection and try again.</value>
+    <comment>Home error state body</comment>
+  </data>
+  <data name="Home_Retry" xml:space="preserve">
+    <value>Try again</value>
+    <comment>Retry button</comment>
+  </data>
+  <data name="Home_OfflineNotice" xml:space="preserve">
+    <value>Showing saved content. Some titles may be out of date.</value>
+    <comment>Shown when cached data is used after a network failure</comment>
+  </data>
+  <data name="Home_Section_FeaturedSeries" xml:space="preserve">
+    <value>Featured Series</value>
+    <comment>Home rail title (fallback when the API group has no title)</comment>
+  </data>
+  <data name="Browse_KindMovies" xml:space="preserve">
+    <value>Movies</value>
+    <comment>UI text: Browse_KindMovies</comment>
+  </data>
+  <data name="Browse_KindSeries" xml:space="preserve">
+    <value>Series</value>
+    <comment>UI text: Browse_KindSeries</comment>
+  </data>
+  <data name="Browse_Sort" xml:space="preserve">
+    <value>Sort</value>
+    <comment>UI text: Browse_Sort</comment>
+  </data>
+  <data name="Browse_Language" xml:space="preserve">
+    <value>Language</value>
+    <comment>UI text: Browse_Language</comment>
+  </data>
+  <data name="Browse_AllLanguages" xml:space="preserve">
+    <value>All languages</value>
+    <comment>UI text: Browse_AllLanguages</comment>
+  </data>
+  <data name="Browse_EmptyTitle" xml:space="preserve">
+    <value>Nothing here yet</value>
+    <comment>UI text: Browse_EmptyTitle</comment>
+  </data>
+  <data name="Browse_EmptyBody" xml:space="preserve">
+    <value>No titles match this selection. Try another option.</value>
+    <comment>UI text: Browse_EmptyBody</comment>
+  </data>
+  <data name="Sort_Default" xml:space="preserve">
+    <value>Default order</value>
+    <comment>UI text: Sort_Default</comment>
+  </data>
+  <data name="Sort_Reverse" xml:space="preserve">
+    <value>Reverse order</value>
+    <comment>UI text: Sort_Reverse</comment>
+  </data>
+  <data name="Sort_StarsHigh" xml:space="preserve">
+    <value>Highest rated</value>
+    <comment>UI text: Sort_StarsHigh</comment>
+  </data>
+  <data name="Sort_StarsLow" xml:space="preserve">
+    <value>Lowest rated</value>
+    <comment>UI text: Sort_StarsLow</comment>
+  </data>
+  <data name="Sort_None" xml:space="preserve">
+    <value>No sorting</value>
+    <comment>UI text: Sort_None</comment>
+  </data>
+  <data name="Results_ErrorTitle" xml:space="preserve">
+    <value>Couldn't load titles</value>
+    <comment>UI text: Results_ErrorTitle</comment>
+  </data>
+  <data name="Results_ErrorBody" xml:space="preserve">
+    <value>Check your internet connection and try again.</value>
+    <comment>UI text: Results_ErrorBody</comment>
+  </data>
+  <data name="Results_EmptyTitle" xml:space="preserve">
+    <value>No titles found</value>
+    <comment>UI text: Results_EmptyTitle</comment>
+  </data>
+  <data name="Results_EmptyBody" xml:space="preserve">
+    <value>There is nothing to show here.</value>
+    <comment>UI text: Results_EmptyBody</comment>
+  </data>
+  <data name="Results_Retry" xml:space="preserve">
+    <value>Try again</value>
+    <comment>UI text: Results_Retry</comment>
+  </data>
+  <data name="Results_OfflineNotice" xml:space="preserve">
+    <value>Showing saved results. Some titles may be out of date.</value>
+    <comment>UI text: Results_OfflineNotice</comment>
+  </data>
+  <data name="Results_LoadMoreFailed" xml:space="preserve">
+    <value>Couldn't load more. Select to try again.</value>
+    <comment>UI text: Results_LoadMoreFailed</comment>
+  </data>
+  <data name="Categories_Main" xml:space="preserve">
+    <value>Main categories</value>
+    <comment>UI text: Categories_Main</comment>
+  </data>
+  <data name="Categories_More" xml:space="preserve">
+    <value>More categories</value>
+    <comment>UI text: Categories_More</comment>
+  </data>
+  <data name="Search_Placeholder" xml:space="preserve">
+    <value>Search for a title</value>
+    <comment>UI text: Search_Placeholder</comment>
+  </data>
+  <data name="Search_Clear" xml:space="preserve">
+    <value>Clear</value>
+    <comment>UI text: Search_Clear</comment>
+  </data>
+  <data name="Search_Advanced" xml:space="preserve">
+    <value>Advanced search</value>
+    <comment>UI text: Search_Advanced</comment>
+  </data>
+  <data name="Search_Idle" xml:space="preserve">
+    <value>Type a title to search movies and series.</value>
+    <comment>UI text: Search_Idle</comment>
+  </data>
+  <data name="Search_EmptyTitle" xml:space="preserve">
+    <value>No results found</value>
+    <comment>UI text: Search_EmptyTitle</comment>
+  </data>
+  <data name="Search_EmptyBody" xml:space="preserve">
+    <value>Try a different title or check the spelling.</value>
+    <comment>UI text: Search_EmptyBody</comment>
+  </data>
+  <data name="Adv_Title" xml:space="preserve">
+    <value>Advanced search</value>
+    <comment>UI text: Adv_Title</comment>
+  </data>
+  <data name="Adv_Edit" xml:space="preserve">
+    <value>Edit filters</value>
+    <comment>UI text: Adv_Edit</comment>
+  </data>
+  <data name="Adv_Apply" xml:space="preserve">
+    <value>Search</value>
+    <comment>UI text: Adv_Apply</comment>
+  </data>
+  <data name="Adv_Reset" xml:space="preserve">
+    <value>Reset</value>
+    <comment>UI text: Adv_Reset</comment>
+  </data>
+  <data name="Adv_VideoTitle" xml:space="preserve">
+    <value>Title</value>
+    <comment>UI text: Adv_VideoTitle</comment>
+  </data>
+  <data name="Adv_Staff" xml:space="preserve">
+    <value>Cast or crew name</value>
+    <comment>UI text: Adv_Staff</comment>
+  </data>
+  <data name="Adv_StaffNote" xml:space="preserve">
+    <value>Searching by name may not find every title.</value>
+    <comment>UI text: Adv_StaffNote</comment>
+  </data>
+  <data name="Adv_YearFrom" xml:space="preserve">
+    <value>From year</value>
+    <comment>UI text: Adv_YearFrom</comment>
+  </data>
+  <data name="Adv_YearTo" xml:space="preserve">
+    <value>To year</value>
+    <comment>UI text: Adv_YearTo</comment>
+  </data>
+  <data name="Adv_Rating" xml:space="preserve">
+    <value>Minimum rating</value>
+    <comment>UI text: Adv_Rating</comment>
+  </data>
+  <data name="Adv_RatingAny" xml:space="preserve">
+    <value>Any</value>
+    <comment>UI text: Adv_RatingAny</comment>
+  </data>
+  <data name="Adv_Type" xml:space="preserve">
+    <value>Type</value>
+    <comment>UI text: Adv_Type</comment>
+  </data>
+  <data name="Adv_TypeAny" xml:space="preserve">
+    <value>Movies and series</value>
+    <comment>UI text: Adv_TypeAny</comment>
+  </data>
+  <data name="Adv_Category" xml:space="preserve">
+    <value>Category</value>
+    <comment>UI text: Adv_Category</comment>
+  </data>
+  <data name="Adv_CategoryAny" xml:space="preserve">
+    <value>Any category</value>
+    <comment>UI text: Adv_CategoryAny</comment>
+  </data>
+  <data name="Adv_Sort" xml:space="preserve">
+    <value>Sort</value>
+    <comment>UI text: Adv_Sort</comment>
+  </data>
+  <data name="Adv_NeedCriteria" xml:space="preserve">
+    <value>Choose at least one filter.</value>
+    <comment>UI text: Adv_NeedCriteria</comment>
+  </data>
+  <data name="Adv_InvalidYears" xml:space="preserve">
+    <value>Enter both years, from the earlier to the later.</value>
+    <comment>UI text: Adv_InvalidYears</comment>
+  </data>
+  <data name="Nav_Staff" xml:space="preserve">
+    <value>Cast and crew</value>
+    <comment>Title of the cast/crew screen.</comment>
+  </data>
+  <data name="Details_NotFoundTitle" xml:space="preserve">
+    <value>Title not found</value>
+    <comment>UI text: Details_NotFoundTitle</comment>
+  </data>
+  <data name="Details_NotFoundBody" xml:space="preserve">
+    <value>This title is no longer available.</value>
+    <comment>UI text: Details_NotFoundBody</comment>
+  </data>
+  <data name="Details_ErrorTitle" xml:space="preserve">
+    <value>Couldn't load this title</value>
+    <comment>UI text: Details_ErrorTitle</comment>
+  </data>
+  <data name="Details_SeasonFormat" xml:space="preserve">
+    <value>Season {0}</value>
+    <comment>UI text: Details_SeasonFormat</comment>
+  </data>
+  <data name="Details_EpisodeFormat" xml:space="preserve">
+    <value>Episode {0}</value>
+    <comment>UI text: Details_EpisodeFormat</comment>
+  </data>
+  <data name="Details_OtherEpisodes" xml:space="preserve">
+    <value>Other episodes</value>
+    <comment>UI text: Details_OtherEpisodes</comment>
+  </data>
+  <data name="Details_PreviousEpisode" xml:space="preserve">
+    <value>Previous episode</value>
+    <comment>UI text: Details_PreviousEpisode</comment>
+  </data>
+  <data name="Details_NextEpisode" xml:space="preserve">
+    <value>Next episode</value>
+    <comment>UI text: Details_NextEpisode</comment>
+  </data>
+  <data name="Details_ViewSeries" xml:space="preserve">
+    <value>View series</value>
+    <comment>UI text: Details_ViewSeries</comment>
+  </data>
+  <data name="Details_Episodes" xml:space="preserve">
+    <value>Episodes</value>
+    <comment>UI text: Details_Episodes</comment>
+  </data>
+  <data name="Details_EpisodesFailed" xml:space="preserve">
+    <value>Couldn't load the episodes.</value>
+    <comment>UI text: Details_EpisodesFailed</comment>
+  </data>
+  <data name="Details_NoEpisodes" xml:space="preserve">
+    <value>No episodes are available yet.</value>
+    <comment>UI text: Details_NoEpisodes</comment>
+  </data>
+  <data name="Details_Cast" xml:space="preserve">
+    <value>Cast</value>
+    <comment>UI text: Details_Cast</comment>
+  </data>
+  <data name="Details_Directors" xml:space="preserve">
+    <value>Directors</value>
+    <comment>UI text: Details_Directors</comment>
+  </data>
+  <data name="Details_Writers" xml:space="preserve">
+    <value>Writers</value>
+    <comment>UI text: Details_Writers</comment>
+  </data>
+  <data name="Details_Recommended" xml:space="preserve">
+    <value>You might also like</value>
+    <comment>UI text: Details_Recommended</comment>
+  </data>
+  <data name="Details_Related" xml:space="preserve">
+    <value>Related titles</value>
+    <comment>UI text: Details_Related</comment>
+  </data>
+  <data name="Details_LanguageFormat" xml:space="preserve">
+    <value>Language: {0}</value>
+    <comment>UI text: Details_LanguageFormat</comment>
+  </data>
+  <data name="Staff_Titles" xml:space="preserve">
+    <value>Appears in</value>
+    <comment>UI text: Staff_Titles</comment>
+  </data>
+  <data name="Staff_EmptyTitle" xml:space="preserve">
+    <value>No titles found</value>
+    <comment>UI text: Staff_EmptyTitle</comment>
+  </data>
+  <data name="Staff_EmptyBody" xml:space="preserve">
+    <value>There are no titles listed for this person.</value>
+    <comment>UI text: Staff_EmptyBody</comment>
+  </data>
+  <data name="Nav_Player" xml:space="preserve">
+    <value>Player</value>
+    <comment>Title of the player screen.</comment>
+  </data>
+  <data name="Player_ResumeTitle" xml:space="preserve">
+    <value>Continue watching?</value>
+    <comment>UI text: Player_ResumeTitle</comment>
+  </data>
+  <data name="Player_ResumeBody" xml:space="preserve">
+    <value>Resume from {0}?</value>
+    <comment>UI text: Player_ResumeBody</comment>
+  </data>
+  <data name="Player_Resume" xml:space="preserve">
+    <value>Resume</value>
+    <comment>UI text: Player_Resume</comment>
+  </data>
+  <data name="Player_StartOver" xml:space="preserve">
+    <value>Start over</value>
+    <comment>UI text: Player_StartOver</comment>
+  </data>
+  <data name="Player_Retry" xml:space="preserve">
+    <value>Try again</value>
+    <comment>UI text: Player_Retry</comment>
+  </data>
+  <data name="Player_Exit" xml:space="preserve">
+    <value>Exit</value>
+    <comment>UI text: Player_Exit</comment>
+  </data>
+  <data name="Player_Skip" xml:space="preserve">
+    <value>Skip intro</value>
+    <comment>UI text: Player_Skip</comment>
+  </data>
+  <data name="Player_UpNext" xml:space="preserve">
+    <value>Up next</value>
+    <comment>UI text: Player_UpNext</comment>
+  </data>
+  <data name="Player_PlayNow" xml:space="preserve">
+    <value>Play now</value>
+    <comment>UI text: Player_PlayNow</comment>
+  </data>
+  <data name="Player_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+    <comment>UI text: Player_Cancel</comment>
+  </data>
+  <data name="Player_NextIn" xml:space="preserve">
+    <value>Next episode in {0}</value>
+    <comment>UI text: Player_NextIn</comment>
+  </data>
+  <data name="Player_PreviousEpisode" xml:space="preserve">
+    <value>Previous episode</value>
+    <comment>UI text: Player_PreviousEpisode</comment>
+  </data>
+  <data name="Player_NextEpisode" xml:space="preserve">
+    <value>Next episode</value>
+    <comment>UI text: Player_NextEpisode</comment>
+  </data>
+  <data name="Player_SeekBack" xml:space="preserve">
+    <value>Back 10 seconds</value>
+    <comment>UI text: Player_SeekBack</comment>
+  </data>
+  <data name="Player_SeekForward" xml:space="preserve">
+    <value>Forward 10 seconds</value>
+    <comment>UI text: Player_SeekForward</comment>
+  </data>
+  <data name="Player_Play" xml:space="preserve">
+    <value>Play</value>
+    <comment>UI text: Player_Play</comment>
+  </data>
+  <data name="Player_Pause" xml:space="preserve">
+    <value>Pause</value>
+    <comment>UI text: Player_Pause</comment>
+  </data>
+  <data name="Player_Options" xml:space="preserve">
+    <value>Options</value>
+    <comment>UI text: Player_Options</comment>
+  </data>
+  <data name="Player_Loading" xml:space="preserve">
+    <value>Loading</value>
+    <comment>UI text: Player_Loading</comment>
+  </data>
+  <data name="Player_Reconnecting" xml:space="preserve">
+    <value>Reconnecting</value>
+    <comment>UI text: Player_Reconnecting</comment>
+  </data>
+  <data name="Player_FellBack" xml:space="preserve">
+    <value>Switched to {0} for smoother playback</value>
+    <comment>UI text: Player_FellBack</comment>
+  </data>
+  <data name="Player_FailedTitle" xml:space="preserve">
+    <value>Playback problem</value>
+    <comment>UI text: Player_FailedTitle</comment>
+  </data>
+  <data name="Player_FailedNetwork" xml:space="preserve">
+    <value>The video could not be loaded. Check your connection and try again.</value>
+    <comment>UI text: Player_FailedNetwork</comment>
+  </data>
+  <data name="Player_FailedNoSource" xml:space="preserve">
+    <value>No video is available for this title right now.</value>
+    <comment>UI text: Player_FailedNoSource</comment>
+  </data>
+  <data name="Player_FailedMedia" xml:space="preserve">
+    <value>This video can't be played on this device.</value>
+    <comment>UI text: Player_FailedMedia</comment>
+  </data>
+  <data name="Player_FailedUnknown" xml:space="preserve">
+    <value>Something went wrong during playback.</value>
+    <comment>UI text: Player_FailedUnknown</comment>
+  </data>
+  <data name="Player_Quality" xml:space="preserve">
+    <value>Quality</value>
+    <comment>UI text: Player_Quality</comment>
+  </data>
+  <data name="Player_Subtitles" xml:space="preserve">
+    <value>Subtitles</value>
+    <comment>UI text: Player_Subtitles</comment>
+  </data>
+  <data name="Player_SubtitlesOff" xml:space="preserve">
+    <value>Off</value>
+    <comment>UI text: Player_SubtitlesOff</comment>
+  </data>
+  <data name="Player_Autoplay" xml:space="preserve">
+    <value>Autoplay next episode</value>
+    <comment>UI text: Player_Autoplay</comment>
+  </data>
+  <data name="Player_On" xml:space="preserve">
+    <value>On</value>
+    <comment>UI text: Player_On</comment>
+  </data>
+  <data name="Player_Off" xml:space="preserve">
+    <value>Off</value>
+    <comment>UI text: Player_Off</comment>
+  </data>
+  <data name="Player_Episodes" xml:space="preserve">
+    <value>Episodes</value>
+    <comment>UI text: Player_Episodes</comment>
+  </data>
+  <data name="Details_Play" xml:space="preserve">
+    <value>Play</value>
+    <comment>UI text: Details_Play</comment>
+  </data>
+  <data name="Nav_Faq" xml:space="preserve">
+    <value>Frequently asked questions</value>
+    <comment>Title of the FAQ screen.</comment>
+  </data>
+  <data name="Home_Section_ContinueWatching" xml:space="preserve">
+    <value>Continue Watching</value>
+    <comment>Home rail title</comment>
+  </data>
+  <data name="Card_EpisodeShort" xml:space="preserve">
+    <value>S{0} E{1}</value>
+    <comment>UI text: Card_EpisodeShort</comment>
+  </data>
+  <data name="Confirm_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+    <comment>UI text: Confirm_Cancel</comment>
+  </data>
+  <data name="Favorites_EmptyTitle" xml:space="preserve">
+    <value>No favorites yet</value>
+    <comment>UI text: Favorites_EmptyTitle</comment>
+  </data>
+  <data name="Favorites_EmptyBody" xml:space="preserve">
+    <value>Add a movie or series to your favorites from its details page.</value>
+    <comment>UI text: Favorites_EmptyBody</comment>
+  </data>
+  <data name="Watchlist_EmptyTitle" xml:space="preserve">
+    <value>Your watchlist is empty</value>
+    <comment>UI text: Watchlist_EmptyTitle</comment>
+  </data>
+  <data name="Watchlist_EmptyBody" xml:space="preserve">
+    <value>Add titles you want to watch later from their details page.</value>
+    <comment>UI text: Watchlist_EmptyBody</comment>
+  </data>
+  <data name="History_EmptyTitle" xml:space="preserve">
+    <value>Nothing watched yet</value>
+    <comment>UI text: History_EmptyTitle</comment>
+  </data>
+  <data name="History_EmptyBody" xml:space="preserve">
+    <value>Titles you start watching will appear here.</value>
+    <comment>UI text: History_EmptyBody</comment>
+  </data>
+  <data name="History_Clear" xml:space="preserve">
+    <value>Clear history</value>
+    <comment>UI text: History_Clear</comment>
+  </data>
+  <data name="History_ClearTitle" xml:space="preserve">
+    <value>Clear watch history?</value>
+    <comment>UI text: History_ClearTitle</comment>
+  </data>
+  <data name="History_ClearBody" xml:space="preserve">
+    <value>This removes your watch history and saved positions from this device. It cannot be undone.</value>
+    <comment>UI text: History_ClearBody</comment>
+  </data>
+  <data name="History_ClearConfirm" xml:space="preserve">
+    <value>Clear history</value>
+    <comment>UI text: History_ClearConfirm</comment>
+  </data>
+  <data name="Faq_UnavailableTitle" xml:space="preserve">
+    <value>FAQ unavailable</value>
+    <comment>UI text: Faq_UnavailableTitle</comment>
+  </data>
+  <data name="Faq_UnavailableBody" xml:space="preserve">
+    <value>The questions could not be read right now.</value>
+    <comment>UI text: Faq_UnavailableBody</comment>
+  </data>
+  <data name="Settings_ReduceMotion" xml:space="preserve">
+    <value>Reduce motion</value>
+    <comment>UI text: Settings_ReduceMotion</comment>
+  </data>
+  <data name="Settings_PlaybackHeader" xml:space="preserve">
+    <value>Playback</value>
+    <comment>UI text: Settings_PlaybackHeader</comment>
+  </data>
+  <data name="Settings_Quality" xml:space="preserve">
+    <value>Preferred quality</value>
+    <comment>UI text: Settings_Quality</comment>
+  </data>
+  <data name="Settings_QualityAuto" xml:space="preserve">
+    <value>Automatic</value>
+    <comment>UI text: Settings_QualityAuto</comment>
+  </data>
+  <data name="Settings_Subtitles" xml:space="preserve">
+    <value>Subtitles</value>
+    <comment>UI text: Settings_Subtitles</comment>
+  </data>
+  <data name="Settings_SubtitlesNote" xml:space="preserve">
+    <value>Used when the title has subtitles in that language.</value>
+    <comment>UI text: Settings_SubtitlesNote</comment>
+  </data>
+  <data name="Settings_Resume" xml:space="preserve">
+    <value>Offer to resume</value>
+    <comment>UI text: Settings_Resume</comment>
+  </data>
+  <data name="Settings_SkipIntro" xml:space="preserve">
+    <value>Skip intro</value>
+    <comment>UI text: Settings_SkipIntro</comment>
+  </data>
+  <data name="Settings_SkipIntroNote" xml:space="preserve">
+    <value>Shown only for titles that provide intro timing.</value>
+    <comment>UI text: Settings_SkipIntroNote</comment>
+  </data>
+  <data name="Settings_StorageHeader" xml:space="preserve">
+    <value>Storage</value>
+    <comment>UI text: Settings_StorageHeader</comment>
+  </data>
+  <data name="Settings_ImagesSize" xml:space="preserve">
+    <value>Saved images: {0}</value>
+    <comment>UI text: Settings_ImagesSize</comment>
+  </data>
+  <data name="Settings_MetadataSize" xml:space="preserve">
+    <value>Saved data: {0}</value>
+    <comment>UI text: Settings_MetadataSize</comment>
+  </data>
+  <data name="Settings_ClearImages" xml:space="preserve">
+    <value>Clear saved images</value>
+    <comment>UI text: Settings_ClearImages</comment>
+  </data>
+  <data name="Settings_ClearMetadata" xml:space="preserve">
+    <value>Clear saved data</value>
+    <comment>UI text: Settings_ClearMetadata</comment>
+  </data>
+  <data name="Settings_ClearSearches" xml:space="preserve">
+    <value>Clear search history</value>
+    <comment>UI text: Settings_ClearSearches</comment>
+  </data>
+  <data name="Settings_ClearHistory" xml:space="preserve">
+    <value>Clear watch history</value>
+    <comment>UI text: Settings_ClearHistory</comment>
+  </data>
+  <data name="Settings_ResetAll" xml:space="preserve">
+    <value>Reset local data</value>
+    <comment>UI text: Settings_ResetAll</comment>
+  </data>
+  <data name="Settings_ResetTitle" xml:space="preserve">
+    <value>Reset all local data?</value>
+    <comment>UI text: Settings_ResetTitle</comment>
+  </data>
+  <data name="Settings_ResetBody" xml:space="preserve">
+    <value>This removes favorites, watchlist, history, saved positions, searches, saved images and your settings from this device. The interface language is kept. It cannot be undone.</value>
+    <comment>UI text: Settings_ResetBody</comment>
+  </data>
+  <data name="Settings_ResetConfirm" xml:space="preserve">
+    <value>Reset everything</value>
+    <comment>UI text: Settings_ResetConfirm</comment>
+  </data>
+  <data name="Settings_AboutHeader" xml:space="preserve">
+    <value>About</value>
+    <comment>UI text: Settings_AboutHeader</comment>
+  </data>
+  <data name="Settings_Version" xml:space="preserve">
+    <value>Version {0}</value>
+    <comment>UI text: Settings_Version</comment>
+  </data>
+  <data name="Settings_OpenSource" xml:space="preserve">
+    <value>Open source: Newtonsoft.Json (MIT License).</value>
+    <comment>UI text: Settings_OpenSource</comment>
+  </data>
+  <data name="Settings_ApiNote" xml:space="preserve">
+    <value>Xmana uses the public Cinemana API. Its documented behavior is described in the project's API.md.</value>
+    <comment>UI text: Settings_ApiNote</comment>
+  </data>
+  <data name="Search_Recent" xml:space="preserve">
+    <value>Recent searches</value>
+    <comment>UI text: Search_Recent</comment>
+  </data>
+  <data name="Search_ClearRecent" xml:space="preserve">
+    <value>Clear recent searches</value>
+    <comment>UI text: Search_ClearRecent</comment>
+  </data>
+  <data name="Details_AddFavorite" xml:space="preserve">
+    <value>Add to favorites</value>
+    <comment>UI text: Details_AddFavorite</comment>
+  </data>
+  <data name="Details_InFavorites" xml:space="preserve">
+    <value>In favorites</value>
+    <comment>UI text: Details_InFavorites</comment>
+  </data>
+  <data name="Details_RemoveFavorite" xml:space="preserve">
+    <value>Remove from favorites</value>
+    <comment>UI text: Details_RemoveFavorite</comment>
+  </data>
+  <data name="Details_AddWatchlist" xml:space="preserve">
+    <value>Add to watchlist</value>
+    <comment>UI text: Details_AddWatchlist</comment>
+  </data>
+  <data name="Details_InWatchlist" xml:space="preserve">
+    <value>In watchlist</value>
+    <comment>UI text: Details_InWatchlist</comment>
+  </data>
+  <data name="Details_RemoveWatchlist" xml:space="preserve">
+    <value>Remove from watchlist</value>
+    <comment>UI text: Details_RemoveWatchlist</comment>
+  </data>
+  <data name="Player_ChangeQuality" xml:space="preserve">
+    <value>Change quality</value>
+    <comment>Player failure screen: switch to another available quality</comment>
+  </data>
+</root>

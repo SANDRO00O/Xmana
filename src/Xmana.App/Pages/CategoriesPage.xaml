@@ -1,0 +1,53 @@
+<Page
+    x:Class="Xmana.App.Pages.CategoriesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Xmana.App.Controls">
+
+    <Grid RowSpacing="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="TitleText"
+                   Grid.Row="0"
+                   Style="{ThemeResource XmanaDisplayTextStyle}"
+                   FontSize="30" />
+
+        <ScrollViewer x:Name="Scroller"
+                      Grid.Row="1"
+                      IsTabStop="False"
+                      VerticalScrollMode="Auto"
+                      VerticalScrollBarVisibility="Hidden"
+                      HorizontalScrollMode="Disabled"
+                      Visibility="Collapsed">
+            <StackPanel Spacing="8" Margin="0,4,0,24">
+                <TextBlock x:Name="MainHeader" Style="{ThemeResource XmanaTitleTextStyle}" FontSize="22" />
+                <StackPanel x:Name="MainRows" Spacing="8" />
+                <TextBlock x:Name="MoreHeader" Style="{ThemeResource XmanaTitleTextStyle}" FontSize="22" Margin="0,14,0,0" />
+                <StackPanel x:Name="MoreRows" Spacing="8" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel x:Name="Skeleton" Grid.Row="1" Spacing="8" Margin="0,8,0,0" Visibility="Visible">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Border Width="190" Height="40" CornerRadius="6" Background="{ThemeResource XmanaSurfaceBrush}" />
+                <Border Width="190" Height="40" CornerRadius="6" Background="{ThemeResource XmanaSurfaceBrush}" />
+                <Border Width="190" Height="40" CornerRadius="6" Background="{ThemeResource XmanaSurfaceBrush}" />
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel x:Name="MessagePanel"
+                    Grid.Row="1"
+                    Visibility="Collapsed"
+                    MaxWidth="460"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Spacing="10">
+            <TextBlock x:Name="MessageTitle" Style="{ThemeResource XmanaTitleTextStyle}" />
+            <TextBlock x:Name="MessageBody" Style="{ThemeResource XmanaSecondaryTextStyle}" />
+            <controls:ChoiceButton x:Name="RetryButton" Width="200" Margin="0,8,0,0" Click="OnRetryClick" />
+        </StackPanel>
+    </Grid>
+</Page>

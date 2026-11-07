@@ -1,0 +1,25 @@
+<UserControl
+    x:Class="Xmana.App.Controls.RailView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    IsTabStop="False">
+
+    <!-- A titled horizontal rail of VideoCards. Cards are lightweight and load their posters lazily. -->
+    <StackPanel Spacing="4">
+        <TextBlock x:Name="TitleText"
+                   Style="{ThemeResource XmanaTitleTextStyle}"
+                   FontSize="22"
+                   TextWrapping="NoWrap"
+                   TextTrimming="CharacterEllipsis" />
+        <ScrollViewer x:Name="Scroller"
+                      IsTabStop="False"
+                      HorizontalScrollMode="Enabled"
+                      HorizontalScrollBarVisibility="Hidden"
+                      VerticalScrollMode="Disabled"
+                      VerticalScrollBarVisibility="Disabled"
+                      ZoomMode="Disabled">
+            <!-- Vertical margin leaves room for the focus scale-up so it is never clipped. -->
+            <StackPanel x:Name="Cards" Orientation="Horizontal" Margin="4,12,4,14" />
+        </ScrollViewer>
+    </StackPanel>
+</UserControl>

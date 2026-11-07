@@ -1,47 +1,115 @@
-name: Build Xmana
+name: Build
 
 on:
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
-  validate:
+  # Fast checks that need no Windows toolchain: static validation + platform-neutral Core tests.
+  core:
+    name: Core tests and static checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate localization parity and repository rules
-        run: python3 tools/validate_localization.py
 
-  build:
-    needs: validate
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-      - name: Restore
-        run: msbuild src/Xmana.sln /t:Restore /p:Configuration=Release /p:Platform=x64
+      - name: Install Pillow (image checks)
+        run: python -m pip install pillow
 
-      - name: Build (x64, Release)
-        run: >
-          msbuild src/Xmana.sln
-          /p:Configuration=Release
-          /p:Platform=x64
-          /p:AppxBundle=Never
-          /p:AppxPackageSigningEnabled=false
-          /p:UapAppxPackageBuildMode=SideloadOnly
-          /p:AppxPackageDir="${{ github.workspace }}\AppPackages\"
-          /m
+      - name: Static validation
+        run: python tools/validate.py
 
-      - name: Upload build output
+      - name: Unit tests
+        run: dotnet test tests/Xmana.Tests/Xmana.Tests.csproj --configuration Release --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: xmana-x64-release
-          path: |
-            AppPackages/**
-            src/Xmana.App/bin/x64/Release/**
-          if-no-files-found: warn
+          name: test-results
+          path: "**/test-results.trx"
+          if-no-files-found: ignore
+
+  # The UWP app can only be built on Windows (needs Visual Studio UWP workload + Windows SDK).
+  app:
+    name: Xbox app (${{ matrix.configuration }} x64)
+    runs-on: windows-latest
+    needs: core
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/setup-msbuild@v2
+
+      # The hosted runner image changes over time. A UWP project that targets a Windows SDK which is
+      # not installed does not fail with a clear message: every Windows.* type just goes missing.
+      # So pick the newest installed UWP platform SDK and print what is available.
+      - name: Detect installed UWP platform SDK
+        shell: pwsh
+        run: |
+          $root = Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\Platforms\UAP'
+          Write-Host "UWP platforms under ${root}:"
+          $versions = @()
+          if (Test-Path $root) {
+            Get-ChildItem $root -Directory | ForEach-Object {
+              $ok = Test-Path (Join-Path $_.FullName 'Platform.xml')
+              Write-Host "  $($_.Name)  Platform.xml=$ok"
+              if ($ok) { $versions += [version]$_.Name }
+            }
+          }
+          if ($versions.Count -eq 0) { throw 'No UWP platform SDK (UAP) is installed on this runner.' }
+          $newest = ($versions | Sort-Object -Descending | Select-Object -First 1).ToString()
+          Write-Host "Using TargetPlatformVersion $newest"
+          "UAP_VERSION=$newest" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Restore
+        run: msbuild src/Xmana.App/Xmana.App.csproj /t:Restore /p:Configuration=${{ matrix.configuration }} /p:Platform=x64 /p:TargetPlatformVersion=${{ env.UAP_VERSION }}
+
+      - name: Build and package (unsigned)
+        run: >
+          msbuild src/Xmana.App/Xmana.App.csproj
+          /p:Configuration=${{ matrix.configuration }}
+          /p:Platform=x64
+          /p:TargetPlatformVersion=${{ env.UAP_VERSION }}
+          /p:AppxBundle=Never
+          /p:UapAppxPackageBuildMode=SideloadOnly
+          /p:AppxPackageSigningEnabled=false
+          /p:AppxPackageDir="${{ github.workspace }}\AppPackages\"
+          /p:GenerateAppxPackageOnBuild=true
+          /m /v:minimal /bl:msbuild-${{ matrix.configuration }}.binlog
+
+      - name: Upload MSBuild binary log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: msbuild-log-${{ matrix.configuration }}
+          path: msbuild-${{ matrix.configuration }}.binlog
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Xmana-${{ matrix.configuration }}-x64
+          path: AppPackages/**
+          if-no-files-found: error
+          retention-days: 14

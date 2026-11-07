@@ -1,0 +1,27 @@
+<UserControl
+    x:Class="Xmana.App.Controls.ConfirmPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Xmana.App.Controls"
+    IsTabStop="False"
+    Visibility="Collapsed">
+
+    <!-- A modal confirmation for destructive actions. The safe choice (Cancel) takes focus first; B cancels. -->
+    <Grid Background="#CC000000">
+        <Border HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                MaxWidth="480"
+                Padding="28"
+                CornerRadius="10"
+                Background="#F21B1B1B">
+            <StackPanel Spacing="12">
+                <TextBlock x:Name="TitleText" Style="{ThemeResource XmanaTitleTextStyle}" />
+                <TextBlock x:Name="BodyText" Style="{ThemeResource XmanaSecondaryTextStyle}" />
+                <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0">
+                    <controls:ChoiceButton x:Name="CancelButton" Width="170" Click="OnCancelClick" />
+                    <controls:ChoiceButton x:Name="ConfirmButton" Width="200" Click="OnConfirmClick" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

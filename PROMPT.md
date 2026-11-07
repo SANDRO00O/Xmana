@@ -275,6 +275,7 @@ Support:
 
 - Arabic queries
 - English queries
+
 - Mixed Arabic/English queries
 - Numbers
 - Common punctuation
@@ -565,8 +566,6 @@ The endpoint returned HTTP 200 in testing. An empty `items` array is a valid no-
 ## Do not ask the user to re-research documented facts
 
 Before requesting API details from the user, read `API.md` and `docs/api-verification-matrix.md`. If a fact is marked **verified**, implement it. If it is marked **uncertain**, use a tolerant model and preserve the raw value rather than blocking unrelated work.
-
----
 
 # 8. Public API Scope
 
@@ -999,7 +998,7 @@ GET /videosByCategory?categoryID={categoryId}&orderby={orderBy}&videoKind={video
 and:
 
 ```text
-GET /videosByCategoryAndLanguage?category_id={category_id}&language_id={language_id}&videoKind={videoKind}&orderby={orderby}&level={level}&offset={offset}
+GET /videosByCategoryAndLanguage?category_id={category_id}&language_id={language_id}&videoKind={videoKind}&orderby={orderBy}&level={level}&offset={offset}
 ```
 
 Support observed sort parameters:
@@ -1692,6 +1691,7 @@ Xmana.Playback
 Xmana.Navigation
 Xmana.Focus
 Xmana.UI
+Xmana.Tests
 ```
 
 ---
@@ -2243,6 +2243,7 @@ Xmana/
 ├── SECURITY.md
 ├── LICENSE
 ├── src/
+├── tests/
 ├── assets/
 └── docs/
 ```
@@ -2279,18 +2280,55 @@ or endorsed by Cinemana, Shabakaty, Microsoft, or Netflix.
 
 ---
 
-# 77. Implementation Quality and Verification
+# 77. Testing
 
-Keep implementation quality high throughout development.
+Create tests for:
 
-- Review code for correctness and consistency as you implement it.
-- Ensure new components are integrated with the actual application rather than left disconnected.
-- Resolve compilation errors and integration defects when they are encountered during development.
-- Verify platform-specific API and framework usage against current Microsoft documentation.
-- Do not claim that a feature works on physical Xbox hardware unless that has actually been confirmed.
-- Do not fabricate build results, runtime behavior, or compatibility claims.
+## API
 
-This section does **not** require creating an automated test suite, a dedicated test project, or running automated tests. Do not pause development to write or execute tests. Focus on completing and integrating the application.
+- Valid responses
+- Empty responses
+- Malformed JSON
+- Missing fields
+- Timeout
+- HTTP errors
+- Cancellation
+
+## Search
+
+- Normal searches
+- Base64URL encoding
+- Special characters
+- Empty results
+
+## Navigation
+
+- D-pad movement
+- Focus restoration
+- B-button behavior
+- Modal focus
+- Player overlay focus
+
+## Playback
+
+- Play
+- Pause
+- Resume
+- Seek
+- Subtitles
+- Quality
+- Completion
+- Next episode
+- Network interruption
+
+## Local Storage
+
+- Add
+- Remove
+- Update
+- Migration
+- Corruption recovery
+- Reset
 
 ---
 
@@ -2316,25 +2354,15 @@ Detect actual player/platform capability before selecting an incompatible media 
 
 ---
 
-# 79. Continuous Autonomous Development — Mandatory Execution Policy
+# 79. Development Milestones
 
-## 79.1 Complete the Entire Project
+Do not generate one giant unstructured implementation.
 
-You must develop Xmana from beginning to end autonomously.
+Build in milestones.
 
-Do not stop after completing an individual milestone. Do not wait for user approval between milestones. Do not treat milestones as separate delivery stages.
+## Milestone 1
 
-The milestones defined in this document are internal development checkpoints intended to organize your work, not stopping points.
-
-Execute all milestones sequentially and continuously until the entire application is implemented, integrated, polished, and ready for release.
-
-The user's intention is to receive the completed Xmana application, not a series of incomplete prototypes.
-
-## Internal Development Roadmap — Not Stopping Points
-
-Use the following milestones to organize the implementation. They are internal checkpoints only. Complete them in sequence without asking the user for approval or pausing for feedback between them.
-
-### Milestone 1 — Project Setup
+Project setup:
 
 - Native Xbox project
 - Xmana branding
@@ -2343,7 +2371,9 @@ Use the following milestones to organize the implementation. They are internal c
 - Controller focus
 - Splash screen
 
-### Milestone 2 — Networking
+## Milestone 2
+
+Networking:
 
 - HTTP layer
 - API client
@@ -2352,15 +2382,19 @@ Use the following milestones to organize the implementation. They are internal c
 - Error handling
 - Cache
 
-### Milestone 3 — Home
+## Milestone 3
+
+Home:
 
 - Banner
 - Rails
-- Featured content
-- Latest content
+- Featured
+- Latest
 - Groups
 
-### Milestone 4 — Discovery
+## Milestone 4
+
+Discovery:
 
 - Movies
 - Series
@@ -2370,7 +2404,9 @@ Use the following milestones to organize the implementation. They are internal c
 - Search
 - Advanced search
 
-### Milestone 5 — Details
+## Milestone 5
+
+Details:
 
 - Movie details
 - Series details
@@ -2379,7 +2415,9 @@ Use the following milestones to organize the implementation. They are internal c
 - Cast
 - Recommendations
 
-### Milestone 6 — Player
+## Milestone 6
+
+Player:
 
 - Native playback engine
 - Custom controls
@@ -2390,7 +2428,9 @@ Use the following milestones to organize the implementation. They are internal c
 - Resume
 - Next episode
 
-### Milestone 7 — Local Features
+## Milestone 7
+
+Local features:
 
 - History
 - Favorites
@@ -2399,15 +2439,19 @@ Use the following milestones to organize the implementation. They are internal c
 - Search history
 - Settings
 
-### Milestone 8 — Performance
+## Milestone 8
+
+Performance:
 
 - Caching
 - Image optimization
 - Request prioritization
 - Memory optimization
-- Weak-hardware considerations
+- Weak-hardware testing
 
-### Milestone 9 — Polish
+## Milestone 9
+
+Polish:
 
 - Animations
 - Focus states
@@ -2415,121 +2459,25 @@ Use the following milestones to organize the implementation. They are internal c
 - Accessibility
 - Controller UX
 
-### Milestone 10 — Release
+## Milestone 10
 
+Release:
+
+- Tests
 - Packaging
 - Deployment documentation
 - Final cleanup
 - Production configuration
 
-Do not wait for confirmation after any of these milestones. Move directly to the next one.
+After every milestone:
 
-## 79.2 Autonomous Execution
-
-Once development begins:
-
-- Continue working without requesting permission to proceed to the next milestone.
-- Do not ask the user whether you should continue.
-- Do not stop to present intermediate results and wait for feedback.
-- Do not leave partially implemented features simply because a milestone has ended.
-- Do not replace real implementations with temporary placeholders.
-- Do not declare the project complete while significant requirements remain unimplemented.
-- Make reasonable engineering decisions independently using the requirements in this document and the repository documentation.
-
-You are responsible for carrying the project through every development stage.
-
-## 79.3 Continuous Build and Integration
-
-Build and integrate continuously throughout development.
-
-After completing each internal milestone:
-
-1. Build the application when the available development environment supports it.
-2. Resolve compilation errors and integration problems that are encountered.
-3. Verify that newly implemented components are connected to the existing architecture.
-4. Check for regressions through code inspection and available runtime/build feedback, without creating an automated testing requirement.
-5. Continue directly to the next milestone.
-
-Passing an individual milestone is not permission to stop. It is a checkpoint that allows development to continue.
-
-Do not postpone integration until the end.
-
-## 79.4 Dependency and Integration Management
-
-Develop the application as one coherent product.
-
-- Integrate new components with existing architecture as they are implemented.
-- Keep APIs, repositories, database, navigation, localization, and UI consistent.
-- Avoid implementing isolated components that are never connected to the actual application.
-- Resolve dependencies between features automatically.
-- Refactor existing code when necessary to support the complete product.
-- Do not introduce duplicate implementations of the same functionality.
-
-Prioritize a fully integrated application over a collection of individually completed modules.
-
-## 79.5 Handling Blockers
-
-Do not stop the entire development process because one feature encounters a problem.
-
-When encountering a blocker:
-
-1. Investigate its root cause.
-2. Attempt a technically valid solution.
-3. Consider alternative implementations that preserve the intended functionality.
-4. Continue developing independent features while resolving the blocker.
-5. If a requirement genuinely cannot be completed because of an external limitation, document the exact limitation and its impact.
-
-Never fabricate successful builds, verified behavior, or compatibility claims.
-
-## 79.6 No Artificial Scope Reduction
-
-Do not simplify the project merely to finish faster.
-
-The original requirements remain mandatory, including:
-
-- Complete Arabic and English localization.
-- Full RTL/LTR support.
-- Native Xbox compatibility.
-- Controller-first navigation.
-- All relevant public API integrations.
-- Movies, series, anime, categories, and search.
-- Complete details pages.
-- Custom video player.
-- Subtitles and dynamic quality selection.
-- Local database and personalization.
-- Caching and network resilience.
-- Settings and accessibility.
-- Performance optimization and release packaging.
-
-Do not silently remove features, downgrade requirements, or replace functional implementations with mock data.
-
-If a feature is unsupported by the Xbox platform or unavailable through the documented public API, handle that limitation honestly and gracefully.
-
-## 79.7 Final Completion Requirement
-
-Continue through all ten development milestones and all integration, implementation, optimization, and release tasks.
-
-The project is not finished when:
-
-- The UI has been created.
-- The application builds for the first time.
-- The API client has been implemented.
-- The home screen works.
-- The first playback attempt succeeds.
-
-The project is finished only when the complete application has been implemented and integrated, release packaging has been addressed, and remaining limitations are documented.
-
-At the end, provide a final report containing:
-
-- Implemented features.
-- Completed development milestones.
-- Build results, when a build environment was available.
-- Xbox compatibility findings and the basis for those findings.
-- Remaining limitations, if any.
-- Release package and deployment instructions.
-- Any functionality that could not be verified on physical Xbox hardware.
-
-**Final instruction: Work continuously and autonomously from project initialization to final delivery. Never pause for milestone approval. Do not consider intermediate progress to be the final deliverable. Your objective is to finish the entire Xmana project.**
+1. Build.
+2. Run tests.
+3. Fix compile errors.
+4. Validate navigation.
+5. Validate controller input.
+6. Check for regressions.
+7. Continue only after the milestone is stable.
 
 ---
 
@@ -2601,7 +2549,7 @@ Never sacrifice basic usability for decorative effects.
 
 ---
 
-# 83. Final Acceptance Journey
+# 83. Final Acceptance Test
 
 A first-time user should be able to:
 

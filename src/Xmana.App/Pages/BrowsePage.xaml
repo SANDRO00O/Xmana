@@ -1,0 +1,33 @@
+<Page
+    x:Class="Xmana.App.Pages.BrowsePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Xmana.App.Controls">
+
+    <!-- Movies, Series, Anime and category results share this page; the navigation entry decides what it shows. -->
+    <Grid RowSpacing="6">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="TitleText"
+                   Grid.Row="0"
+                   Style="{ThemeResource XmanaDisplayTextStyle}"
+                   FontSize="30"
+                   TextWrapping="NoWrap"
+                   TextTrimming="CharacterEllipsis" />
+
+        <StackPanel x:Name="FilterBar" Grid.Row="1" Orientation="Horizontal" Spacing="10" Margin="0,2,0,4">
+            <StackPanel x:Name="KindPanel" Orientation="Horizontal" Spacing="6" VerticalAlignment="Bottom">
+                <controls:ChoiceButton x:Name="MoviesButton" Width="112" Click="OnKindClick" />
+                <controls:ChoiceButton x:Name="SeriesButton" Width="112" Click="OnKindClick" />
+            </StackPanel>
+            <ComboBox x:Name="SortBox" Width="164" SelectionChanged="OnSortChanged" />
+            <ComboBox x:Name="LanguageBox" Width="164" SelectionChanged="OnLanguageChanged" Visibility="Collapsed" />
+        </StackPanel>
+
+        <controls:ResultsView x:Name="Results" Grid.Row="2" />
+    </Grid>
+</Page>
